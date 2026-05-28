@@ -1,0 +1,9 @@
+binaries/
+ghidra/DeDaggerate.gpr
+ghidra/DeDaggerate.rep/
+
+*.lock*
+
+__pycache__/
+
+/.*/
