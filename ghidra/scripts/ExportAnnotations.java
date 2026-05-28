@@ -177,14 +177,14 @@ public class ExportAnnotations extends GhidraScript {
 			else if(type instanceof Enum) {
 				object.addProperty("kind", "enum");
 
-				Enum enum = (Enum) type;
-				object.addProperty("size", enum.getLength());
+				Enum enumeration = (Enum) type;
+				object.addProperty("size", enumeration.getLength());
 
 				JsonArray values = new JsonArray();
-				for(String name : enum.getNames()) {
+				for(String name : enumeration.getNames()) {
 					JsonObject value = new JsonObject();
 					value.addProperty("name", name);
-					value.addProperty("value", enum.getValue(name));
+					value.addProperty("value", enumeration.getValue(name));
 					values.add(value);
 				}
 

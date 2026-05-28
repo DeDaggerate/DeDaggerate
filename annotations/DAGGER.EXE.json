@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "binary": "DAGGER.EXE",
+  "language": "x86:LE:16:Real Mode",
+  "cspec": "watcom16",
+  "image_sha256": "74d0216997e5fb5839d968a78855b94c5788dce61ca29df488d753d4a7477e8e",
+  "data_types": [],
+  "functions": [
+    {
+      "address": "1000:0a21",
+      "name": "__stack_probe",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "size",
+          "type": "/uint"
+        }
+      ]
+    },
+    {
+      "address": "1000:313c",
+      "name": "file_exists",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "path",
+          "type": "/char *"
+        }
+      ]
+    }
+  ],
+  "symbols": [],
+  "data": [],
+  "comments": []
+}

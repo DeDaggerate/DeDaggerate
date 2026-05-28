@@ -224,14 +224,14 @@ public class ImportAnnotations extends GhidraScript {
 	}
 
 	private void populateEnum(String path, JsonObject object) {
-		Enum enum = (Enum) dataTypeManager.getDataType(path);
-		if(enum == null) return;
+		Enum enumeration = (Enum) dataTypeManager.getDataType(path);
+		if(enumeration == null) return;
 
-		for(String name : enum.getNames()) enum.remove(name);
+		for(String name : enumeration.getNames()) enumeration.remove(name);
 
 		for(JsonElement valueElement : object.getAsJsonArray("values")) {
 			JsonObject value = valueElement.getAsJsonObject();
-			enum.add(value.get("name").getAsString(), value.get("value").getAsLong());
+			enumeration.add(value.get("name").getAsString(), value.get("value").getAsLong());
 		}
 	}
 
