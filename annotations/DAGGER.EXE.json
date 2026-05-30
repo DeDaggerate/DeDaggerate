@@ -4,11 +4,30 @@
   "language": "x86:LE:16:Real Mode",
   "cspec": "watcom16",
   "image_sha256": "74d0216997e5fb5839d968a78855b94c5788dce61ca29df488d753d4a7477e8e",
-  "data_types": [],
+  "data_types": [
+    {
+      "path": "/dagger_config_entry",
+      "kind": "struct",
+      "size": 60,
+      "packed": true,
+      "fields": [
+        {
+          "offset": 0,
+          "name": "key",
+          "type": "/char[30]"
+        },
+        {
+          "offset": 30,
+          "name": "value",
+          "type": "/char[30]"
+        }
+      ]
+    }
+  ],
   "functions": [
     {
       "address": "1000:0008",
-      "name": "unsure_probably_dos_pause",
+      "name": "dagger_pause",
       "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": []
@@ -27,35 +46,64 @@
     },
     {
       "address": "1000:00da",
-      "name": "dagger_check_cd_and_read_something",
+      "name": "dagger_read_z_cfg",
       "calling_convention": "__watcall16",
       "return_type": "/byte",
-      "parameters": [
-        {
-          "name": "param_1",
-          "type": "/undefined2"
-        },
-        {
-          "name": "param_2",
-          "type": "/undefined2"
-        },
-        {
-          "name": "param_3",
-          "type": "/int"
-        }
-      ]
+      "parameters": []
     },
     {
       "address": "1000:02c1",
-      "name": "dagger_open_config_file",
+      "name": "dagger_check_cd",
       "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": []
     },
     {
       "address": "1000:02f3",
-      "name": "dagger_some_other_config_processing",
+      "name": "dagger_populate_config_records",
       "calling_convention": "__cdecl16near",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:0412",
+      "name": "dagger_ensure_file_handle_cap",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:0468",
+      "name": "dagger_mouse_check",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:0509",
+      "name": "dagger_windows_check",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:057c",
+      "name": "dagger_read_memory_config",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:0663",
+      "name": "dagger_read_bethesda_inf",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:0743",
+      "name": "dagger_read_swap_config",
+      "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": []
     },
@@ -63,7 +111,7 @@
       "address": "1000:0808",
       "name": "dagger_real_main",
       "calling_convention": "__watcall16",
-      "return_type": "/void",
+      "return_type": "/int",
       "parameters": [
         {
           "name": "argc",
@@ -89,7 +137,7 @@
     },
     {
       "address": "1000:0a55",
-      "name": "unsure_maybe_printf",
+      "name": "printf_",
       "calling_convention": "__cdecl",
       "return_type": "/void",
       "parameters": [
@@ -98,6 +146,22 @@
           "type": "/char *"
         }
       ]
+    },
+    {
+      "address": "1000:0a75",
+      "name": "__clib_stdio_maybe_fflush",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [
+        {
+          "name": "fp",
+          "type": "/preprocessed-small.h/FILE *"
+        }
+      ]
+    },
+    {
+      "address": "1000:0a82",
+      "name": "getch_"
     },
     {
       "address": "1000:0bef",
@@ -111,7 +175,7 @@
         },
         {
           "name": "mode",
-          "type": "/int"
+          "type": "/char *"
         },
         {
           "name": "something",
@@ -121,23 +185,23 @@
     },
     {
       "address": "1000:0c06",
-      "name": "__clib_stdio_freopen_with_some_default_maybe",
+      "name": "fopen_",
       "calling_convention": "__watcall16",
       "return_type": "/preprocessed-small.h/FILE *",
       "parameters": [
         {
-          "name": "fp1",
-          "type": "/preprocessed-small.h/FILE *"
+          "name": "path",
+          "type": "/char *"
         },
         {
           "name": "mode",
-          "type": "/int"
+          "type": "/char *"
         }
       ]
     },
     {
       "address": "1000:0c89",
-      "name": "__clib_stdio_maybe_fgets",
+      "name": "fgets_",
       "calling_convention": "__watcall16",
       "return_type": "/char *",
       "parameters": [
@@ -157,9 +221,9 @@
     },
     {
       "address": "1000:0cff",
-      "name": "__clib_strcmp_maybe",
+      "name": "strnicmp_",
       "calling_convention": "__watcall16",
-      "return_type": "/uint",
+      "return_type": "/int",
       "parameters": [
         {
           "name": "a",
@@ -177,7 +241,7 @@
     },
     {
       "address": "1000:0d48",
-      "name": "__clib_stdio_ftell_maybe",
+      "name": "ftell_",
       "calling_convention": "__watcall16",
       "return_type": "/long",
       "parameters": [
@@ -189,7 +253,7 @@
     },
     {
       "address": "1000:0eb9",
-      "name": "unsure_probably_exit",
+      "name": "exit_",
       "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": [
@@ -201,7 +265,7 @@
     },
     {
       "address": "1000:0eee",
-      "name": "unsure_maybe_sprintf",
+      "name": "sprintf_",
       "calling_convention": "__cdecl",
       "return_type": "/int",
       "parameters": [
@@ -221,7 +285,7 @@
     },
     {
       "address": "1000:0fc1",
-      "name": "unsure_maybe_strncmp",
+      "name": "strncmp_",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -241,7 +305,7 @@
     },
     {
       "address": "1000:1031",
-      "name": "unsure_maybe_fseek",
+      "name": "fseek_",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -261,7 +325,7 @@
     },
     {
       "address": "1000:1130",
-      "name": "__clib_heap_maybe_malloc",
+      "name": "malloc_",
       "calling_convention": "__watcall16",
       "return_type": "/byte *",
       "parameters": [
@@ -320,8 +384,97 @@
       ]
     },
     {
+      "address": "1000:14fb",
+      "name": "strchr_",
+      "calling_convention": "__watcall16",
+      "return_type": "/char *",
+      "parameters": [
+        {
+          "name": "str",
+          "type": "/char *"
+        },
+        {
+          "name": "c",
+          "type": "/char"
+        }
+      ],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
       "address": "1000:1546",
-      "name": "unsure_maybe_strncpy"
+      "name": "strncpy_"
+    },
+    {
+      "address": "1000:156f",
+      "name": "stricmp_",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "str_a",
+          "type": "/char *"
+        },
+        {
+          "name": "str_b",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:15ab",
+      "name": "atoi_",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "str",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:1600",
+      "name": "unlink_",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "path",
+          "type": "/char *"
+        }
+      ],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
+      "address": "1000:161b",
+      "name": "rmdir_",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "path",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:1636",
+      "name": "mkdir_",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "str",
+          "type": "/char *"
+        }
+      ],
+      "tags": [
+        "MANUAL_ASM"
+      ]
     },
     {
       "address": "1000:1651",
@@ -340,8 +493,75 @@
       ]
     },
     {
+      "address": "1000:16d1",
+      "name": "spawnv_",
+      "calling_convention": "__cdecl",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "mode",
+          "type": "/int"
+        },
+        {
+          "name": "path",
+          "type": "/char *"
+        },
+        {
+          "name": "argv",
+          "type": "/char * *"
+        }
+      ]
+    },
+    {
+      "address": "1000:16ec",
+      "name": "setenv_",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "/char *"
+        },
+        {
+          "name": "value",
+          "type": "/char *"
+        },
+        {
+          "name": "overwrite",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:198f",
+      "name": "toupper_"
+    },
+    {
+      "address": "1000:1c8e",
+      "name": "__clib_stdio_1000_1c8e",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": []
+    },
+    {
+      "address": "1000:1cc0",
+      "name": "__clib_stdio_1000_1cc0",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/preprocessed-small.h/FILE *"
+        }
+      ]
+    },
+    {
       "address": "1000:1d67",
-      "name": "unsure_maybe_set_errno"
+      "name": "__clib_set_errno"
+    },
+    {
+      "address": "1000:1f6d",
+      "name": "__clib_stdio_unsure_mode_string_to_flags"
     },
     {
       "address": "1000:2073",
@@ -378,6 +598,17 @@
       ]
     },
     {
+      "address": "1000:223a",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "path",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
       "address": "1000:2e3f",
       "calling_convention": "__watcall16",
       "return_type": "/void",
@@ -389,14 +620,75 @@
       ]
     },
     {
+      "address": "1000:30c6",
+      "name": "unsure_maybe_convert_dos_to_errno",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/uint"
+        }
+      ]
+    },
+    {
       "address": "1000:313c",
-      "name": "file_exists",
+      "name": "__clib_stdio_file_exists",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
         {
           "name": "path",
           "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:318f",
+      "name": "spawnve_",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "mode",
+          "type": "/int"
+        },
+        {
+          "name": "path",
+          "type": "/char *"
+        },
+        {
+          "name": "argv",
+          "type": "/char * *"
+        },
+        {
+          "name": "envp",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:3519",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:380c",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/uint"
+        },
+        {
+          "name": "param_2",
+          "type": "/undefined2"
+        },
+        {
+          "name": "param_3",
+          "type": "/uint"
         }
       ]
     },
@@ -408,27 +700,189 @@
       "parameters": []
     },
     {
+      "address": "1000:3b7d",
+      "name": "unsure_maybe_argv_concatenate",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/int *"
+        },
+        {
+          "name": "argv",
+          "type": "/char * *"
+        },
+        {
+          "name": "param_3",
+          "type": "/int *"
+        },
+        {
+          "name": "param_4",
+          "type": "/undefined2 *"
+        },
+        {
+          "name": "param_5",
+          "type": "/int *"
+        },
+        {
+          "name": "param_6",
+          "type": "/undefined2 *"
+        },
+        {
+          "name": "param_7",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:4006",
+      "name": "unsure_maybe_getenv",
+      "calling_convention": "__watcall16",
+      "return_type": "/char *",
+      "parameters": [
+        {
+          "name": "key",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1427:0060",
+      "name": "dagger_int24_suppress_stub",
+      "calling_convention": "__interrupt",
+      "return_type": "/void",
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
       "address": "1427:0064",
-      "name": "unsure_some_syscall_1"
+      "name": "dagger_save_int24_handler",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
     },
     {
       "address": "1427:0085",
-      "name": "unsure_some_syscall_2"
+      "name": "dagger_restore_int24_handler",
+      "tags": [
+        "MANUAL_ASM"
+      ]
     },
     {
-      "address": "1427:00d4",
-      "name": "unsure_maybe_windows_check_2fh_1600",
+      "address": "1427:00a0",
+      "name": "dagger_save_int33_handler",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
+      "address": "1427:00b9",
+      "name": "dagger_restore_int33_hander",
       "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": []
     },
     {
+      "address": "1427:00d4",
+      "name": "dagger_print_program_signature",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1427:00e3",
+      "name": "dagger_cold_reboot",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
+      "address": "1427:00f4",
+      "name": "dagger_get_max_file_handles",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
       "address": "1427:0111",
-      "name": "unsure_some_syscall_with_40_char_buffer"
+      "name": "dagger_get_drive_numbers",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [
+        {
+          "name": "out_buffer",
+          "type": "/byte *"
+        }
+      ],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
+      "address": "1427:0151",
+      "name": "dagger_get_windows_version",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
     },
     {
       "address": "1427:016d",
-      "name": "unsure_some_fpenv_check_thing"
+      "name": "unsure_some_string_replace",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [
+        {
+          "name": "value",
+          "type": "/char"
+        },
+        {
+          "name": "buffer",
+          "type": "/char *"
+        },
+        {
+          "name": "key",
+          "type": "/char *"
+        },
+        {
+          "name": "length",
+          "type": "/uint"
+        }
+      ],
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
+      "address": "1427:01e0",
+      "name": "unsure_some_smartdrv_nonsense",
+      "tags": [
+        "MANUAL_ASM"
+      ]
+    },
+    {
+      "address": "1427:0232",
+      "name": "unsure_more_smartdrv_nonsense",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
     }
   ],
   "symbols": [
@@ -440,12 +894,57 @@
     {
       "address": "1000:01cd",
       "name": "keep_going",
-      "namespace": "dagger_check_cd_and_read_something"
+      "namespace": "dagger_read_z_cfg"
     },
     {
       "address": "1000:02dc",
       "name": "prt_102dc_3831e62a",
-      "namespace": "dagger_open_config_file::override"
+      "namespace": "dagger_check_cd::override"
+    },
+    {
+      "address": "1000:044d",
+      "name": "prt_1044d_fdcdfc1c",
+      "namespace": "dagger_ensure_file_handle_cap::override"
+    },
+    {
+      "address": "1000:04d2",
+      "name": "prt_104d2_34dc5c56",
+      "namespace": "dagger_mouse_check::override"
+    },
+    {
+      "address": "1000:04e3",
+      "name": "prt_104e3_3831e62a",
+      "namespace": "dagger_mouse_check::override"
+    },
+    {
+      "address": "1000:04ed",
+      "name": "prt_104ed_3831e62a",
+      "namespace": "dagger_mouse_check::override"
+    },
+    {
+      "address": "1000:04f7",
+      "name": "prt_104f7_3831e62a",
+      "namespace": "dagger_mouse_check::override"
+    },
+    {
+      "address": "1000:0573",
+      "name": "prt_10573_34dc5c56",
+      "namespace": "dagger_windows_check::override"
+    },
+    {
+      "address": "1000:05e3",
+      "name": "prt_105e3_34dc5c56",
+      "namespace": "dagger_read_memory_config::override"
+    },
+    {
+      "address": "1000:07d6",
+      "name": "prt_107d6_34dc5c56",
+      "namespace": "dagger_read_swap_config::override"
+    },
+    {
+      "address": "1000:07e8",
+      "name": "prt_107e8_59e77884",
+      "namespace": "dagger_read_swap_config::override"
     },
     {
       "address": "1000:083c",
@@ -468,14 +967,78 @@
       "namespace": "dagger_real_main::override"
     },
     {
+      "address": "1000:0918",
+      "name": "prt_10918_fdcdfc1c",
+      "namespace": "dagger_real_main::override"
+    },
+    {
+      "address": "1000:0926",
+      "name": "prt_10926_fdcdfc1c",
+      "namespace": "dagger_real_main::override"
+    },
+    {
+      "address": "1000:093e",
+      "name": "prt_1093e_59e77884",
+      "namespace": "dagger_real_main::override"
+    },
+    {
       "address": "1000:1093",
       "name": "failure",
-      "namespace": "unsure_maybe_fseek"
+      "namespace": "fseek_"
     },
     {
       "address": "1000:1128",
       "name": "success",
-      "namespace": "unsure_maybe_fseek"
+      "namespace": "fseek_"
+    },
+    {
+      "address": "1000:3226",
+      "name": "error_out",
+      "namespace": "spawnve_"
+    },
+    {
+      "address": "1427:0001",
+      "name": "dagger_string_program_signature"
+    },
+    {
+      "address": "1427:0058",
+      "name": "dagger_global_int24_vector_save_high"
+    },
+    {
+      "address": "1427:005a",
+      "name": "dagger_global_int24_vector_save_low"
+    },
+    {
+      "address": "1427:005c",
+      "name": "dagger_global_int33_save_high"
+    },
+    {
+      "address": "1427:005e",
+      "name": "dagger_global_int33_save_low"
+    },
+    {
+      "address": "1427:01b4",
+      "name": "dagger_global_save_ax"
+    },
+    {
+      "address": "1427:01b5",
+      "name": "dagger_global_save_dx"
+    },
+    {
+      "address": "1427:01b7",
+      "name": "dagger_global_save_bx"
+    },
+    {
+      "address": "1427:01b9",
+      "name": "dagger_global_save_cx"
+    },
+    {
+      "address": "144d:0022",
+      "name": "dagger_string_fall_exe_file"
+    },
+    {
+      "address": "144d:002b",
+      "name": "dagger_string_z_cfg_file"
     },
     {
       "address": "144d:0031",
@@ -486,8 +1049,12 @@
       "name": "dagger_string_newline"
     },
     {
+      "address": "144d:0042",
+      "name": "dagger_string_file_mode_read"
+    },
+    {
       "address": "144d:0044",
-      "name": "dagger_string_patched"
+      "name": "dagger_string_pathcd"
     },
     {
       "address": "144d:004c",
@@ -538,8 +1105,84 @@
       "name": "dagger_string_wrong_cd_1"
     },
     {
+      "address": "144d:0234",
+      "name": "dagger_string_open_mode_read_binary_plus"
+    },
+    {
       "address": "144d:0238",
       "name": "dagger_string_bell_cannot_play_off_cd"
+    },
+    {
+      "address": "144d:0288",
+      "name": "dagger_string_scanning_file_handles"
+    },
+    {
+      "address": "144d:02b6",
+      "name": "dagger_string_format_int"
+    },
+    {
+      "address": "144d:02ba",
+      "name": "dagger_string_insufficient_file_handles_1"
+    },
+    {
+      "address": "144d:0303",
+      "name": "dagger_string_insufficient_file_handles_2"
+    },
+    {
+      "address": "144d:0347",
+      "name": "dagger_string_mouse"
+    },
+    {
+      "address": "144d:034d",
+      "name": "dagger_string_not_present"
+    },
+    {
+      "address": "144d:0359",
+      "name": "dagger_string_found"
+    },
+    {
+      "address": "144d:035f",
+      "name": "dagger_string_scanning_for_mouse"
+    },
+    {
+      "address": "144d:0390",
+      "name": "dagger_string_missing_mouse_1"
+    },
+    {
+      "address": "144d:0393",
+      "name": "dagger_string_missing_mouse_2"
+    },
+    {
+      "address": "144d:03b8",
+      "name": "dagger_string_missing_mouse_3"
+    },
+    {
+      "address": "144d:03f0",
+      "name": "dagger_string_windows"
+    },
+    {
+      "address": "144d:03f8",
+      "name": "dagger_string_scanning_for_windows"
+    },
+    {
+      "address": "144d:0429",
+      "name": "dagger_string_memory"
+    },
+    {
+      "address": "144d:0430",
+      "name": "dagger_string_scanning_for_memory"
+    },
+    {
+      "address": "144d:0461",
+      "name": "dagger_string_swap"
+    },
+    {
+      "address": "144d:0466",
+      "name": "dagger_string_swap_file"
+    },
+    {
+      "address": "144d:0472",
+      "name": "dagger_string_scanning_for_virtual_memory"
     },
     {
       "address": "144d:04a3",
@@ -558,12 +1201,92 @@
       "name": "dagger_string_no_windows_1"
     },
     {
+      "address": "144d:053d",
+      "name": "dagger_string_memcheck_log_file"
+    },
+    {
       "address": "144d:055a",
       "name": "dagger_string_file_not_found_format"
     },
     {
+      "address": "144d:0570",
+      "name": "dagger_string_insufficient_memory_1"
+    },
+    {
+      "address": "144d:05c0",
+      "name": "dagger_string_insufficient_memory_2"
+    },
+    {
+      "address": "144d:060d",
+      "name": "dagger_string_insufficient_memory_3"
+    },
+    {
+      "address": "144d:064e",
+      "name": "dagger_string_memory_config_format"
+    },
+    {
+      "address": "144d:0679",
+      "name": "dagger_string_causeway"
+    },
+    {
+      "address": "144d:0682",
+      "name": "dagger_string_environment_oom_1"
+    },
+    {
+      "address": "144d:06b5",
+      "name": "dagger_string_environment_oom_2"
+    },
+    {
+      "address": "144d:0712",
+      "name": "dagger_string_now_loading"
+    },
+    {
+      "address": "144d:073f",
+      "name": "dagger_string_bell_2_newline"
+    },
+    {
+      "address": "144d:0743",
+      "name": "dagger_string_failed_launch_0"
+    },
+    {
+      "address": "144d:078c",
+      "name": "dagger_string_failed_launch_1"
+    },
+    {
+      "address": "144d:07dd",
+      "name": "dagger_string_failed_launch_2"
+    },
+    {
+      "address": "144d:0806",
+      "name": "dagger_string_failed_launch_3"
+    },
+    {
+      "address": "144d:0833",
+      "name": "__clib_string_bat_extension"
+    },
+    {
+      "address": "144d:0838",
+      "name": "__clib_string_com_extension"
+    },
+    {
+      "address": "144d:083d",
+      "name": "__clib_string_exe_extension"
+    },
+    {
+      "address": "144d:0842",
+      "name": "__clib_string_comspec"
+    },
+    {
       "address": "144d:0886",
       "name": "dagger_string_no_float_support"
+    },
+    {
+      "address": "144d:08aa",
+      "name": "__clib_ctype_attribute_table_head"
+    },
+    {
+      "address": "144d:08ab",
+      "name": "__clib_ctype_attribute_table"
     },
     {
       "address": "144d:09ac",
@@ -572,6 +1295,34 @@
     {
       "address": "144d:09b1",
       "name": "dagger_string_daggerfa"
+    },
+    {
+      "address": "144d:09ba",
+      "name": "dagger_global_record_count"
+    },
+    {
+      "address": "144d:09bc",
+      "name": "dagger_global_fall_exe_path_ptr"
+    },
+    {
+      "address": "144d:09be",
+      "name": "dagger_global_z_cfg_path_ptr"
+    },
+    {
+      "address": "144d:09d0",
+      "name": "unsure_maybe_stdin"
+    },
+    {
+      "address": "144d:09d5",
+      "name": "unsure_maybe_some_global_fptr"
+    },
+    {
+      "address": "144d:0b30",
+      "name": "__clib_unsure_possibly_environ"
+    },
+    {
+      "address": "144d:0bc8",
+      "name": "dagger_global_memory_string_copy"
     },
     {
       "address": "144d:0c68",
@@ -586,8 +1337,40 @@
       "name": "dagger_global_working_directory"
     },
     {
+      "address": "144d:0e48",
+      "name": "unsure_some_virtual_memory_file_buffer"
+    },
+    {
+      "address": "144d:0ee8",
+      "name": "dagger_global_memory_string"
+    },
+    {
+      "address": "144d:0f88",
+      "name": "dagger_global_memory_config_buffer"
+    },
+    {
+      "address": "144d:1028",
+      "name": "dagger_global_config_record"
+    },
+    {
+      "address": "144d:1730",
+      "name": "dagger_global_memory_2"
+    },
+    {
+      "address": "144d:1732",
+      "name": "dagger_global_memory_2_rollover"
+    },
+    {
       "address": "144d:1734",
       "name": "dagger_global_config_last_seek"
+    },
+    {
+      "address": "144d:1738",
+      "name": "dagger_global_memory_1"
+    },
+    {
+      "address": "144d:173a",
+      "name": "dagger_global_memory_1_rollover"
     },
     {
       "address": "144d:173e",
@@ -598,8 +1381,28 @@
       "name": "dagger_global_config_line_length"
     },
     {
+      "address": "144d:1742",
+      "name": "dagger_global_windows_value"
+    },
+    {
+      "address": "144d:1744",
+      "name": "dagger_global_memory_2_index"
+    },
+    {
+      "address": "144d:1746",
+      "name": "dagger_global_mouse_id"
+    },
+    {
+      "address": "144d:1748",
+      "name": "unsure_probably_windows_check_return"
+    },
+    {
+      "address": "144d:174a",
+      "name": "dagger_global_have_swap"
+    },
+    {
       "address": "144d:174c",
-      "name": "find_result"
+      "name": "dagger_global_find_result"
     },
     {
       "address": "144d:174e",
@@ -616,6 +1419,50 @@
   ],
   "data": [
     {
+      "address": "1427:0001",
+      "type": "/char[87]"
+    },
+    {
+      "address": "1427:0058",
+      "type": "/uint"
+    },
+    {
+      "address": "1427:005a",
+      "type": "/uint"
+    },
+    {
+      "address": "1427:005c",
+      "type": "/uint"
+    },
+    {
+      "address": "1427:005e",
+      "type": "/uint"
+    },
+    {
+      "address": "1427:01b4",
+      "type": "/byte"
+    },
+    {
+      "address": "1427:01b5",
+      "type": "/uint"
+    },
+    {
+      "address": "1427:01b7",
+      "type": "/uint"
+    },
+    {
+      "address": "1427:01b9",
+      "type": "/uint"
+    },
+    {
+      "address": "144d:0022",
+      "type": "/string"
+    },
+    {
+      "address": "144d:002b",
+      "type": "/string"
+    },
+    {
       "address": "144d:0031",
       "type": "/string"
     },
@@ -624,7 +1471,19 @@
       "type": "/char[2]"
     },
     {
+      "address": "144d:0042",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0044",
+      "type": "/TerminatedCString"
+    },
+    {
       "address": "144d:004c",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0094",
       "type": "/TerminatedCString"
     },
     {
@@ -633,6 +1492,10 @@
     },
     {
       "address": "144d:00a8",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:00b5",
       "type": "/TerminatedCString"
     },
     {
@@ -660,8 +1523,84 @@
       "type": "/string"
     },
     {
+      "address": "144d:0234",
+      "type": "/TerminatedCString"
+    },
+    {
       "address": "144d:0238",
       "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0288",
+      "type": "/string"
+    },
+    {
+      "address": "144d:02b6",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:02ba",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0303",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0347",
+      "type": "/string"
+    },
+    {
+      "address": "144d:034d",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0359",
+      "type": "/string"
+    },
+    {
+      "address": "144d:035f",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0390",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0393",
+      "type": "/string"
+    },
+    {
+      "address": "144d:03b8",
+      "type": "/string"
+    },
+    {
+      "address": "144d:03f0",
+      "type": "/string"
+    },
+    {
+      "address": "144d:03f8",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0429",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0430",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0461",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0466",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0472",
+      "type": "/string"
     },
     {
       "address": "144d:04a3",
@@ -680,7 +1619,79 @@
       "type": "/string"
     },
     {
+      "address": "144d:053d",
+      "type": "/string"
+    },
+    {
       "address": "144d:055a",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0570",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:05c0",
+      "type": "/string"
+    },
+    {
+      "address": "144d:060d",
+      "type": "/string"
+    },
+    {
+      "address": "144d:064e",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0679",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0682",
+      "type": "/string"
+    },
+    {
+      "address": "144d:06b5",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0712",
+      "type": "/string"
+    },
+    {
+      "address": "144d:073f",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0743",
+      "type": "/string"
+    },
+    {
+      "address": "144d:078c",
+      "type": "/string"
+    },
+    {
+      "address": "144d:07dd",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0806",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0833",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0838",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:083d",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0842",
       "type": "/string"
     },
     {
@@ -688,12 +1699,48 @@
       "type": "/string"
     },
     {
+      "address": "144d:08aa",
+      "type": "/byte[1]"
+    },
+    {
+      "address": "144d:08ab",
+      "type": "/byte[128]"
+    },
+    {
       "address": "144d:09ac",
       "type": "/TerminatedCString"
     },
     {
       "address": "144d:09b1",
-      "type": "/string"
+      "type": "/char[8]"
+    },
+    {
+      "address": "144d:09ba",
+      "type": "/int"
+    },
+    {
+      "address": "144d:09bc",
+      "type": "/char *"
+    },
+    {
+      "address": "144d:09be",
+      "type": "/char *"
+    },
+    {
+      "address": "144d:09d0",
+      "type": "/preprocessed-small.h/FILE *"
+    },
+    {
+      "address": "144d:09d5",
+      "type": "/preprocessed-small.h/FILE *"
+    },
+    {
+      "address": "144d:0b30",
+      "type": "/char *"
+    },
+    {
+      "address": "144d:0bc8",
+      "type": "/undefined1"
     },
     {
       "address": "144d:0c68",
@@ -708,8 +1755,40 @@
       "type": "/char[80]"
     },
     {
+      "address": "144d:0e48",
+      "type": "/char[0]"
+    },
+    {
+      "address": "144d:0ee8",
+      "type": "/char[30]"
+    },
+    {
+      "address": "144d:0f88",
+      "type": "/char[0]"
+    },
+    {
+      "address": "144d:1028",
+      "type": "/dagger_config_entry[30]"
+    },
+    {
+      "address": "144d:1730",
+      "type": "/int"
+    },
+    {
+      "address": "144d:1732",
+      "type": "/int"
+    },
+    {
       "address": "144d:1734",
       "type": "/long"
+    },
+    {
+      "address": "144d:1738",
+      "type": "/int"
+    },
+    {
+      "address": "144d:173a",
+      "type": "/undefined2"
     },
     {
       "address": "144d:173e",
@@ -717,7 +1796,31 @@
     },
     {
       "address": "144d:1740",
-      "type": "/undefined2"
+      "type": "/int"
+    },
+    {
+      "address": "144d:1742",
+      "type": "/int"
+    },
+    {
+      "address": "144d:1744",
+      "type": "/int"
+    },
+    {
+      "address": "144d:1746",
+      "type": "/int"
+    },
+    {
+      "address": "144d:1748",
+      "type": "/int"
+    },
+    {
+      "address": "144d:174a",
+      "type": "/int"
+    },
+    {
+      "address": "144d:174c",
+      "type": "/int"
     },
     {
       "address": "144d:174e",
@@ -850,6 +1953,11 @@
     },
     {
       "address": "1000:0e3b",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0ecb",
       "kind": "plate",
       "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
     },
@@ -1276,7 +2384,7 @@
     {
       "address": "1000:4006",
       "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+      "text": "Likely Watcom CRT internal; references strcmp-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
     },
     {
       "address": "1000:4063",
@@ -1357,6 +2465,16 @@
       "address": "1427:0232",
       "kind": "plate",
       "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x4a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:00d4",
+      "kind": "pre",
+      "text": "This is likely handrolled assembly"
+    },
+    {
+      "address": "1427:0060",
+      "kind": "eol",
+      "text": "Sets handled state to \"ignored\""
     }
   ]
 }

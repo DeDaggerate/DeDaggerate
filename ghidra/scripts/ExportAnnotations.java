@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +36,7 @@ import ghidra.program.model.listing.CommentType;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.FunctionManager;
+import ghidra.program.model.listing.FunctionTag;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.Program;
@@ -214,7 +217,14 @@ public class ExportAnnotations extends GhidraScript {
 		for(Function field : functions) {
 			boolean nameUser = field.getSymbol().getSource() == SourceType.USER_DEFINED;
 			boolean signatureUser = field.getSignatureSource() == SourceType.USER_DEFINED;
-			if(!nameUser && !signatureUser) continue;
+
+			Collection<FunctionTag> functionTags = field.getTags();
+			List<String> tagNames = new ArrayList<>();
+			for(FunctionTag tag : functionTags) tagNames.add(tag.getName());
+			Collections.sort(tagNames);
+			boolean hasTags = !tagNames.isEmpty();
+
+			if(!nameUser && !signatureUser && !hasTags) continue;
 
 			JsonObject object = new JsonObject();
 			object.addProperty("address", field.getEntryPoint().toString());
@@ -233,6 +243,12 @@ public class ExportAnnotations extends GhidraScript {
 				}
 
 				object.add("parameters", parameters);
+			}
+
+			if(hasTags) {
+				JsonArray tagsArray = new JsonArray();
+				for(String tagName : tagNames) tagsArray.add(tagName);
+				object.add("tags", tagsArray);
 			}
 
 			array.add(object);

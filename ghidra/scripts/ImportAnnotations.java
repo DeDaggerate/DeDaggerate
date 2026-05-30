@@ -290,6 +290,12 @@ public class ImportAnnotations extends GhidraScript {
 							SourceType.USER_DEFINED);
 				}
 
+				if(object.has("tags")) {
+					for(JsonElement tagElement : object.getAsJsonArray("tags")) {
+						field.addTag(tagElement.getAsString());
+					}
+				}
+
 				count++;
 			}
 			catch(Exception exception) {
