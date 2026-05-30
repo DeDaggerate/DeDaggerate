@@ -52,7 +52,7 @@ import ghidra.program.model.listing.InstructionIterator;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Program;
 
-import ghidra.program.model.memory.Memory;
+import ghidra.program.model.mem.Memory;
 
 import ghidra.program.model.symbol.RefType;
 import ghidra.program.model.symbol.Reference;
@@ -85,8 +85,10 @@ public class ExportSources extends GhidraScript {
 	private final List<Function> cFunctions = new ArrayList<>();
 	private final List<Function> asmFunctions = new ArrayList<>();
 	private final List<Data> externData = new ArrayList<>();
-	private final Map<String, String> inlineStringsBySymbol = new LinkedHashMap<>();
-	private final Set<String> inlinedSymbolNames = new HashSet<>();
+
+	private final Map<String, String> inlineCandidateLiterals = new LinkedHashMap<>();
+	private final Map<String, Data> inlineCandidateData = new LinkedHashMap<>();
+	private final Set<String> actuallyInlined = new HashSet<>();
 
 	@Override
 	public void run() throws Exception {
@@ -116,20 +118,20 @@ public class ExportSources extends GhidraScript {
 
 			collect();
 
-			String header = emitHeader();
 			String cSource = emitC();
 			String asmSource = emitAsm();
+			String header = emitHeader();
 
 			atomicWrite(output.resolve(basename + ".h"), header);
-			atomicWrite(output.resolve(basename + ".typeComponent"), cSource);
+			atomicWrite(output.resolve(basename + ".c"), cSource);
 			atomicWrite(output.resolve(basename + ".asm"), asmSource);
 
 			println(
 					"wrote " +
-					cFunctions.size() + " typeComponent funcs, " +
+					cFunctions.size() + " c funcs, " +
 					asmFunctions.size() + " asm funcs, " +
 					externData.size() + " externs, " +
-					inlineStringsBySymbol.size() + " inlined strings");
+					actuallyInlined.size() + " inlined strings");
 		}
 		finally {
 			decompiler.dispose();
@@ -172,34 +174,32 @@ public class ExportSources extends GhidraScript {
 					&& !isLoaderCategory(type.getCategoryPath().getPath());
 
 			Symbol primary = symbolTable.getPrimarySymbol(data.getMinAddress());
-			boolean userLabel = primary != null && primary.getSource() == SourceType.USER_DEFINED;
+			String preferredName = primary != null ? primary.getName() : null;
+			boolean userLabel = false;
 
-			if(!userType && !userLabel) continue;
+			for(Symbol symbol : symbolTable.getSymbols(data.getMinAddress())) {
+				SourceType source = symbol.getSource();
+				if(source == SourceType.USER_DEFINED || source == SourceType.IMPORTED) {
+					userLabel = true;
+					boolean primaryIsAuto = primary == null
+							|| primary.getSource() == SourceType.DEFAULT
+							|| primary.getSource() == SourceType.ANALYSIS;
 
-			int reads = 0;
-			int writes = 0;
-
-			ReferenceIterator it = referenceManager.getReferencesTo(data.getMinAddress());
-			while(it.hasNext()) {
-				Reference reference = it.next();
-				RefType referenceType = reference.getReferenceType();
-
-				if(!referenceType.isData()) continue;
-				if(referenceType.isRead()) reads++;
-				if(referenceType.isWrite()) writes++;
+					if(preferredName == null || primaryIsAuto) preferredName = symbol.getName();
+					break;
+				}
 			}
 
-			if(reads == 0 && writes == 0) continue;
+			if(!userType && !userLabel) continue;
+			if(preferredName == null) continue;
 
-			if(isStringLike(data) && reads == 1 && writes == 0) {
-				String name = primary != null ? primary.getName() : null;
-				if(name != null) {
-					String literal = stringLiteralFromData(data);
-					if(literal != null) {
-						inlineStringsBySymbol.put(name, literal);
-						inlinedSymbolNames.add(name);
-						continue;
-					}
+			boolean stringLike = isStringLike(data);
+			if(stringLike) {
+				String literal = stringLiteralFromData(data);
+				if(literal != null) {
+					inlineCandidateLiterals.put(preferredName, literal);
+					inlineCandidateData.put(preferredName, data);
+					continue;
 				}
 			}
 
@@ -221,9 +221,16 @@ public class ExportSources extends GhidraScript {
 			for(Data data : externData) {
 				Symbol primary = symbolTable.getPrimarySymbol(data.getMinAddress());
 				String name = primary != null ? primary.getName() : ("DAT_" + data.getMinAddress());
-				String typeDecl = renderTypeForDecl(data.getDataType(), name);
-				stringBuilder.append("extern ").append(typeDecl).append(";\n");
+				stringBuilder.append("extern ").append(renderExternDecl(data, name)).append(";\n");
 			}
+		}
+
+		for(Map.Entry<String, Data> entry : inlineCandidateData.entrySet()) {
+			String name = entry.getKey();
+			if(actuallyInlined.contains(name)) continue;
+
+			Data data = entry.getValue();
+			stringBuilder.append("extern ").append(renderExternDecl(data, name)).append("; /* inline fallback */\n");
 		}
 
 		stringBuilder.append("\n#endif\n");
@@ -308,13 +315,37 @@ public class ExportSources extends GhidraScript {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("#include \"").append(basename).append(".h\"\n\n");
 
-		Map<Pattern, String> substitutions = new LinkedHashMap<>();
-		for(Map.Entry<String, String> entry : inlineStringsBySymbol.entrySet()) {
-			Pattern pattern = Pattern.compile("\\byteValue" + Pattern.quote(entry.getKey()) + "\\byteValue");
-			substitutions.put(pattern, Matcher.quoteReplacement(entry.getValue()));
+		Map<String, Pattern> patternsBySymbol = new LinkedHashMap<>();
+		for(String symbolName : inlineCandidateLiterals.keySet()) {
+			patternsBySymbol.put(symbolName, Pattern.compile("\\b" + Pattern.quote(symbolName) + "\\b"));
 		}
 
+		List<String> bodies = new ArrayList<>(cFunctions.size());
+		Map<String, Integer> occurrenceCount = new LinkedHashMap<>();
+		for(String symbol : patternsBySymbol.keySet()) occurrenceCount.put(symbol, 0);
+
 		for(Function function : cFunctions) {
+			DecompileResults results = decompiler.decompileFunction(function, 60, monitor);
+			if(!results.decompileCompleted() || results.getDecompiledFunction() == null) {
+				bodies.add(null);
+				continue;
+			}
+			String body = results.getDecompiledFunction().getC();
+			bodies.add(body);
+			if(body == null) continue;
+
+			for(Map.Entry<String, Pattern> entry : patternsBySymbol.entrySet()) {
+				Matcher matcher = entry.getValue().matcher(body);
+				int count = 0;
+				while(matcher.find()) count++;
+				if(count > 0) occurrenceCount.merge(entry.getKey(), count, Integer::sum);
+			}
+		}
+
+		for(int i = 0; i < cFunctions.size(); i++) {
+			Function function = cFunctions.get(i);
+			String body = bodies.get(i);
+
 			String platePre = program.getListing().getComment(CommentType.PLATE, function.getEntryPoint());
 			if(platePre != null && !platePre.isEmpty()) {
 				stringBuilder.append("/*\n");
@@ -322,29 +353,25 @@ public class ExportSources extends GhidraScript {
 				stringBuilder.append(" */\n");
 			}
 
-			DecompileResults results = decompiler.decompileFunction(function, 60, monitor);
-			if(!results.decompileCompleted()) {
-				stringBuilder
-						.append("/* decompile failed for ")
-						.append(function.getName())
-				  		.append(": ")
-						.append(results.getErrorMessage())
-						.append(" */\n\n");
-
+			if(body == null) {
+				stringBuilder.append("/* decompile failed for ").append(function.getName()).append(" */\n\n");
 				continue;
 			}
 
-			DecompiledFunction decompiledFunction = results.getDecompiledFunction();
-			String body = decompiledFunction.getC();
-			if(body == null) continue;
-
-			for(Map.Entry<Pattern, String> sub : substitutions.entrySet()) {
-				body = sub.getKey().matcher(body).replaceAll(sub.getValue());
+			for(Map.Entry<String, Pattern> entry : patternsBySymbol.entrySet()) {
+				String symbolName = entry.getKey();
+				if(occurrenceCount.getOrDefault(symbolName, 0) != 1) continue;
+				Pattern pattern = entry.getValue();
+				Matcher matcher = pattern.matcher(body);
+				if(matcher.find()) {
+					actuallyInlined.add(symbolName);
+					matcher.reset();
+					body = matcher.replaceAll(Matcher.quoteReplacement(inlineCandidateLiterals.get(symbolName)));
+				}
 			}
 
 			stringBuilder.append(body);
 			if(!body.endsWith("\n")) stringBuilder.append('\n');
-
 			stringBuilder.append('\n');
 		}
 
@@ -452,7 +479,7 @@ public class ExportSources extends GhidraScript {
 		stringBuilder.append(name).append(" ENDP\n");
 	}
 
-	private static final Pattern HEX_LITERAL = Pattern.compile("\\b0x([0-9A-Fa-f]+)\\byteValue");
+	private static final Pattern HEX_LITERAL = Pattern.compile("\\b0x([0-9A-Fa-f]+)\\b");
 
 	private String masmifyOperand(String operand) {
 		String out = operand.replace("word ptr", "WORD PTR")
@@ -636,6 +663,26 @@ public class ExportSources extends GhidraScript {
 
 		stringBuilder.append('$');
 		return Pattern.compile(stringBuilder.toString());
+	}
+
+	private String renderExternDecl(Data data, String identifier) {
+		DataType type = data.getDataType();
+		if(isStringTypeName(type)) {
+			int length = data.getLength();
+			if(length > 0) return "char " + identifier + "[" + length + "]";
+			return "char " + identifier + "[]";
+		}
+
+		return renderTypeForDecl(type, identifier);
+	}
+
+	private static boolean isStringTypeName(DataType type) {
+		String name = type.getName();
+		return "string".equals(name)
+				|| "TerminatedCString".equals(name)
+				|| "string-utf8".equals(name)
+				|| "unicode".equals(name)
+				|| "TerminatedUnicode".equals(name);
 	}
 
 	private String renderTypeForDecl(DataType type, String identifier) {
