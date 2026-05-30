@@ -7,6 +7,75 @@
   "data_types": [],
   "functions": [
     {
+      "address": "1000:0008",
+      "name": "unsure_probably_dos_pause",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:002c",
+      "name": "dagger_lookup_config",
+      "calling_convention": "__watcall16",
+      "return_type": "/char *",
+      "parameters": [
+        {
+          "name": "key",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:00da",
+      "name": "dagger_check_cd_and_read_something",
+      "calling_convention": "__watcall16",
+      "return_type": "/byte",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/undefined2"
+        },
+        {
+          "name": "param_2",
+          "type": "/undefined2"
+        },
+        {
+          "name": "param_3",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:02c1",
+      "name": "dagger_open_config_file",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:02f3",
+      "name": "dagger_some_other_config_processing",
+      "calling_convention": "__cdecl16near",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1000:0808",
+      "name": "dagger_real_main",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [
+        {
+          "name": "argc",
+          "type": "/int"
+        },
+        {
+          "name": "argv",
+          "type": "/char * *"
+        }
+      ]
+    },
+    {
       "address": "1000:0a21",
       "name": "__stack_probe",
       "calling_convention": "__watcall16",
@@ -15,6 +84,307 @@
         {
           "name": "size",
           "type": "/uint"
+        }
+      ]
+    },
+    {
+      "address": "1000:0a55",
+      "name": "unsure_maybe_printf",
+      "calling_convention": "__cdecl",
+      "return_type": "/void",
+      "parameters": [
+        {
+          "name": "format",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:0bef",
+      "name": "__clib_stdio_freopen_something_maybe",
+      "calling_convention": "__watcall16",
+      "return_type": "/preprocessed-small.h/FILE *",
+      "parameters": [
+        {
+          "name": "fp",
+          "type": "/preprocessed-small.h/FILE *"
+        },
+        {
+          "name": "mode",
+          "type": "/int"
+        },
+        {
+          "name": "something",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:0c06",
+      "name": "__clib_stdio_freopen_with_some_default_maybe",
+      "calling_convention": "__watcall16",
+      "return_type": "/preprocessed-small.h/FILE *",
+      "parameters": [
+        {
+          "name": "fp1",
+          "type": "/preprocessed-small.h/FILE *"
+        },
+        {
+          "name": "mode",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:0c89",
+      "name": "__clib_stdio_maybe_fgets",
+      "calling_convention": "__watcall16",
+      "return_type": "/char *",
+      "parameters": [
+        {
+          "name": "buffer",
+          "type": "/char *"
+        },
+        {
+          "name": "count",
+          "type": "/int"
+        },
+        {
+          "name": "fp",
+          "type": "/preprocessed-small.h/FILE *"
+        }
+      ]
+    },
+    {
+      "address": "1000:0cff",
+      "name": "__clib_strcmp_maybe",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "a",
+          "type": "/char *"
+        },
+        {
+          "name": "b",
+          "type": "/char *"
+        },
+        {
+          "name": "length",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:0d48",
+      "name": "__clib_stdio_ftell_maybe",
+      "calling_convention": "__watcall16",
+      "return_type": "/long",
+      "parameters": [
+        {
+          "name": "fp",
+          "type": "/preprocessed-small.h/FILE *"
+        }
+      ]
+    },
+    {
+      "address": "1000:0eb9",
+      "name": "unsure_probably_exit",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [
+        {
+          "name": "exit_code",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:0eee",
+      "name": "unsure_maybe_sprintf",
+      "calling_convention": "__cdecl",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "path",
+          "type": "/char *"
+        },
+        {
+          "name": "format",
+          "type": "/char *"
+        }
+      ]
+    },
+    {
+      "address": "1000:0f5d",
+      "name": "strcat_"
+    },
+    {
+      "address": "1000:0fc1",
+      "name": "unsure_maybe_strncmp",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "str_a",
+          "type": "/char *"
+        },
+        {
+          "name": "str_b",
+          "type": "/char *"
+        },
+        {
+          "name": "length",
+          "type": "/int"
+        }
+      ]
+    },
+    {
+      "address": "1000:1031",
+      "name": "unsure_maybe_fseek",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "fp",
+          "type": "/preprocessed-small.h/FILE *"
+        },
+        {
+          "name": "whence",
+          "type": "/uint"
+        },
+        {
+          "name": "amount",
+          "type": "/long"
+        }
+      ]
+    },
+    {
+      "address": "1000:1130",
+      "name": "__clib_heap_maybe_malloc",
+      "calling_convention": "__watcall16",
+      "return_type": "/byte *",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/uint"
+        }
+      ]
+    },
+    {
+      "address": "1000:11e0",
+      "name": "unsure_maybe_fread_0",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "buffer",
+          "type": "/byte *"
+        },
+        {
+          "name": "size",
+          "type": "/uint"
+        },
+        {
+          "name": "count",
+          "type": "/int"
+        },
+        {
+          "name": "fp",
+          "type": "/preprocessed-small.h/FILE *"
+        }
+      ]
+    },
+    {
+      "address": "1000:1356",
+      "name": "unsure_maybe_fread_1",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/byte *"
+        },
+        {
+          "name": "param_2",
+          "type": "/uint"
+        },
+        {
+          "name": "param_3",
+          "type": "/uint"
+        },
+        {
+          "name": "param_4",
+          "type": "/preprocessed-small.h/FILE *"
+        }
+      ]
+    },
+    {
+      "address": "1000:1546",
+      "name": "unsure_maybe_strncpy"
+    },
+    {
+      "address": "1000:1651",
+      "name": "getcwd_",
+      "calling_convention": "__watcall16",
+      "return_type": "/char *",
+      "parameters": [
+        {
+          "name": "buffer",
+          "type": "/char *"
+        },
+        {
+          "name": "maxlen",
+          "type": "/uint"
+        }
+      ]
+    },
+    {
+      "address": "1000:1d67",
+      "name": "unsure_maybe_set_errno"
+    },
+    {
+      "address": "1000:2073",
+      "name": "__clib_stdio_maybe_fgetc",
+      "calling_convention": "__watcall16",
+      "return_type": "/int",
+      "parameters": [
+        {
+          "name": "fp",
+          "type": "/preprocessed-small.h/FILE *"
+        }
+      ]
+    },
+    {
+      "address": "1000:20d6",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/int *"
+        }
+      ]
+    },
+    {
+      "address": "1000:20f3",
+      "calling_convention": "__watcall16",
+      "return_type": "/uint",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/undefined2 *"
+        }
+      ]
+    },
+    {
+      "address": "1000:2e3f",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [
+        {
+          "name": "param_1",
+          "type": "/undefined2 *"
         }
       ]
     },
@@ -29,9 +399,964 @@
           "type": "/char *"
         }
       ]
+    },
+    {
+      "address": "1000:3866",
+      "name": "unsure_maybe_get_errno",
+      "calling_convention": "__watcall16",
+      "return_type": "/int *",
+      "parameters": []
+    },
+    {
+      "address": "1427:0064",
+      "name": "unsure_some_syscall_1"
+    },
+    {
+      "address": "1427:0085",
+      "name": "unsure_some_syscall_2"
+    },
+    {
+      "address": "1427:00d4",
+      "name": "unsure_maybe_windows_check_2fh_1600",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": []
+    },
+    {
+      "address": "1427:0111",
+      "name": "unsure_some_syscall_with_40_char_buffer"
+    },
+    {
+      "address": "1427:016d",
+      "name": "unsure_some_fpenv_check_thing"
     }
   ],
-  "symbols": [],
-  "data": [],
-  "comments": []
+  "symbols": [
+    {
+      "address": "1000:00a9",
+      "name": "finish_up",
+      "namespace": "dagger_lookup_config"
+    },
+    {
+      "address": "1000:01cd",
+      "name": "keep_going",
+      "namespace": "dagger_check_cd_and_read_something"
+    },
+    {
+      "address": "1000:02dc",
+      "name": "prt_102dc_3831e62a",
+      "namespace": "dagger_open_config_file::override"
+    },
+    {
+      "address": "1000:083c",
+      "name": "prt_1083c_dd064e32",
+      "namespace": "dagger_real_main::override"
+    },
+    {
+      "address": "1000:084e",
+      "name": "prt_1084e_dd064e32",
+      "namespace": "dagger_real_main::override"
+    },
+    {
+      "address": "1000:0876",
+      "name": "prt_10876_3831e62a",
+      "namespace": "dagger_real_main::override"
+    },
+    {
+      "address": "1000:08d2",
+      "name": "prt_108d2_34dc5c56",
+      "namespace": "dagger_real_main::override"
+    },
+    {
+      "address": "1000:1093",
+      "name": "failure",
+      "namespace": "unsure_maybe_fseek"
+    },
+    {
+      "address": "1000:1128",
+      "name": "success",
+      "namespace": "unsure_maybe_fseek"
+    },
+    {
+      "address": "144d:0031",
+      "name": "dagger_string_press_any_key"
+    },
+    {
+      "address": "144d:0040",
+      "name": "dagger_string_newline"
+    },
+    {
+      "address": "144d:0044",
+      "name": "dagger_string_patched"
+    },
+    {
+      "address": "144d:004c",
+      "name": "dagger_string_critical_failure"
+    },
+    {
+      "address": "144d:0094",
+      "name": "dagger_string_cstr_format"
+    },
+    {
+      "address": "144d:0098",
+      "name": "dagger_string_install_directory"
+    },
+    {
+      "address": "144d:00a8",
+      "name": "dagger_string_install_scr_file"
+    },
+    {
+      "address": "144d:00b5",
+      "name": "dagger_string_ring_bell"
+    },
+    {
+      "address": "144d:00b8",
+      "name": "dagger_string_cannot_find_cd_0"
+    },
+    {
+      "address": "144d:0105",
+      "name": "dagger_string_cannot_find_cd_1"
+    },
+    {
+      "address": "144d:0151",
+      "name": "dagger_string_cannot_find_cd_2"
+    },
+    {
+      "address": "144d:0198",
+      "name": "dagger_string_cannot_find_cd_3"
+    },
+    {
+      "address": "144d:01ba",
+      "name": "dagger_string_wildcard_find_pattern"
+    },
+    {
+      "address": "144d:01c0",
+      "name": "dagger_string_wrong_cd_0"
+    },
+    {
+      "address": "144d:020c",
+      "name": "dagger_string_wrong_cd_1"
+    },
+    {
+      "address": "144d:0238",
+      "name": "dagger_string_bell_cannot_play_off_cd"
+    },
+    {
+      "address": "144d:04a3",
+      "name": "dagger_string_report_exe_format"
+    },
+    {
+      "address": "144d:04b9",
+      "name": "dagger_string_bethesda_inf_format"
+    },
+    {
+      "address": "144d:04d1",
+      "name": "dagger_string_no_windows_0"
+    },
+    {
+      "address": "144d:0522",
+      "name": "dagger_string_no_windows_1"
+    },
+    {
+      "address": "144d:055a",
+      "name": "dagger_string_file_not_found_format"
+    },
+    {
+      "address": "144d:0886",
+      "name": "dagger_string_no_float_support"
+    },
+    {
+      "address": "144d:09ac",
+      "name": "dagger_string_art3"
+    },
+    {
+      "address": "144d:09b1",
+      "name": "dagger_string_daggerfa"
+    },
+    {
+      "address": "144d:0c68",
+      "name": "dagger_global_report_exe_path"
+    },
+    {
+      "address": "144d:0d08",
+      "name": "dagger_global_bethesda_inf_path"
+    },
+    {
+      "address": "144d:0da8",
+      "name": "dagger_global_working_directory"
+    },
+    {
+      "address": "144d:1734",
+      "name": "dagger_global_config_last_seek"
+    },
+    {
+      "address": "144d:173e",
+      "name": "dagger_global_config_file"
+    },
+    {
+      "address": "144d:1740",
+      "name": "dagger_global_config_line_length"
+    },
+    {
+      "address": "144d:174c",
+      "name": "find_result"
+    },
+    {
+      "address": "144d:174e",
+      "name": "dagger_global_finddata_buffer"
+    },
+    {
+      "address": "144d:1779",
+      "name": "__dagger_global_startup_scratch_buffer_ahead"
+    },
+    {
+      "address": "144d:177a",
+      "name": "dagger_global_config_scratch_buffer"
+    }
+  ],
+  "data": [
+    {
+      "address": "144d:0031",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0040",
+      "type": "/char[2]"
+    },
+    {
+      "address": "144d:004c",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0098",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:00a8",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:00b8",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:0105",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0151",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0198",
+      "type": "/string"
+    },
+    {
+      "address": "144d:01c0",
+      "type": "/string"
+    },
+    {
+      "address": "144d:020c",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0238",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:04a3",
+      "type": "/string"
+    },
+    {
+      "address": "144d:04b9",
+      "type": "/string"
+    },
+    {
+      "address": "144d:04d1",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0522",
+      "type": "/string"
+    },
+    {
+      "address": "144d:055a",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0886",
+      "type": "/string"
+    },
+    {
+      "address": "144d:09ac",
+      "type": "/TerminatedCString"
+    },
+    {
+      "address": "144d:09b1",
+      "type": "/string"
+    },
+    {
+      "address": "144d:0c68",
+      "type": "/char[0]"
+    },
+    {
+      "address": "144d:0d08",
+      "type": "/char[0]"
+    },
+    {
+      "address": "144d:0da8",
+      "type": "/char[80]"
+    },
+    {
+      "address": "144d:1734",
+      "type": "/long"
+    },
+    {
+      "address": "144d:173e",
+      "type": "/preprocessed-small.h/FILE *16"
+    },
+    {
+      "address": "144d:1740",
+      "type": "/undefined2"
+    },
+    {
+      "address": "144d:174e",
+      "type": "/preprocessed-small.h/find_t"
+    },
+    {
+      "address": "144d:1779",
+      "type": "/char[1]"
+    },
+    {
+      "address": "144d:177a",
+      "type": "/char[80]"
+    }
+  ],
+  "comments": [
+    {
+      "address": "1000:0008",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:00da",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:02c1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:02f3",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0412",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0468",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0509",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:057c",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0663",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0743",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0a38",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0a55",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0a75",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0a82",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x08).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0a96",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0b3a",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; calls CRT-private helper __chktty_.\nOnly CRT code legitimately calls that helper; treat this as a public CRT entry.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0bef",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references stdio-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0c06",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references stdio-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0c89",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0cff",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0d48",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0dc1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0dcd",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0e3b",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0eee",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0fc1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:0fef",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1031",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1130",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references heap-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:11e0",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1356",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:14fb",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1546",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:156f",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:15ab",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1600",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x41).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:161b",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x3a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1636",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x39).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1651",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x47).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:16d1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references process-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:16ec",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:18ac",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:198f",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:199e",
+      "kind": "plate",
+      "text": "Watcom C-runtime entry (_cstart_).\nSets up DGROUP, env/argv, NO87 check, then calls:\n  __InitRtns_  (static initialisers)\n  main()       (user code)\n  __FiniRtns_  (static finalisers, on return)\nMarked by Watcom DOS Startup Recognition."
+    },
+    {
+      "address": "1000:1a47",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x4a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1c27",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1c8e",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1cc0",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1d56",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1d67",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1d84",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1db1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x3d).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:1f6d",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references stdio-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2073",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:20d6",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references stdio-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:20f3",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; calls CRT-private helper __flushall_.\nOnly CRT code legitimately calls that helper; treat this as a public CRT entry.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:217f",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:218e",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references heap-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2192",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x42).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:21d2",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x3e).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:21fd",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references heap-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:223d",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2430",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:253b",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:258c",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:25ac",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:25d1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2630",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2710",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2715",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2ac5",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2aec",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2b90",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2c99",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references heap-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2d27",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; calls CRT-private helper __brk_.\nOnly CRT code legitimately calls that helper; treat this as a public CRT entry.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2e02",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; calls CRT-private helper __LastFree_.\nOnly CRT code legitimately calls that helper; treat this as a public CRT entry.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2e3c",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2e3f",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; calls CRT-private helper __chktty_.\nOnly CRT code legitimately calls that helper; treat this as a public CRT entry.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2e9c",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x3f).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:2eb2",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x42).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3032",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:30c1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:30c6",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:313c",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:315e",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; calls CRT-private helper __ccmdline_.\nOnly CRT code legitimately calls that helper; treat this as a public CRT entry.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:318f",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; calls CRT-private helper __ccmdline_.\nOnly CRT code legitimately calls that helper; treat this as a public CRT entry.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3463",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:34d6",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3519",
+      "kind": "plate",
+      "text": "User main(); Watcom CRT hand-off point.\nCalled by __cstart_ after __InitRtns_ completes; CRT resumes with __FiniRtns_ on return.\nThis is where the actual program logic begins.\nMarked by Watcom DOS Startup Recognition."
+    },
+    {
+      "address": "1000:3530",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3586",
+      "kind": "plate",
+      "text": "Watcom static initialiser walker (__InitRtns_).\nIterates the __XI table installing C++/static-storage initialisers.\nMarked by Watcom DOS Startup Recognition."
+    },
+    {
+      "address": "1000:35a4",
+      "kind": "plate",
+      "text": "Watcom static finaliser walker (__FiniRtns_).\nIterates the __YI table running atexit/static destructors after main returns.\nMarked by Watcom DOS Startup Recognition."
+    },
+    {
+      "address": "1000:380c",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x42).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3866",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:386a",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:388a",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:38d1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:38e1",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x01).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:397a",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3a9f",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3b66",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3b7d",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3de2",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3de6",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3e20",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3eee",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3f15",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:3f2b",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:4006",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:4063",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1000:4070",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references heap-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:4097",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; references heap-private DGROUP global; user code never touches these directly.\nMarked by Watcom CRT Data-Touch Propagation. Rename to override."
+    },
+    {
+      "address": "1000:424e",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:0064",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x35).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:0085",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x25).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:00a0",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x35).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:00b9",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x25).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:00d4",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x09).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:00e3",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:00f4",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x52).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:0111",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x15).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:0151",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x16).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:016d",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:01e0",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x4a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    },
+    {
+      "address": "1427:0232",
+      "kind": "plate",
+      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x4a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
+    }
+  ]
 }
