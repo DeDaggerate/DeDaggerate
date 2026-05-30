@@ -796,7 +796,10 @@
       "name": "dagger_print_program_signature",
       "calling_convention": "__watcall16",
       "return_type": "/void",
-      "parameters": []
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
     },
     {
       "address": "1427:00e3",
@@ -1277,10 +1280,6 @@
       "name": "__clib_string_comspec"
     },
     {
-      "address": "144d:0886",
-      "name": "dagger_string_no_float_support"
-    },
-    {
       "address": "144d:08aa",
       "name": "__clib_ctype_attribute_table_head"
     },
@@ -1692,10 +1691,6 @@
     },
     {
       "address": "144d:0842",
-      "type": "/string"
-    },
-    {
-      "address": "144d:0886",
       "type": "/string"
     },
     {
@@ -2465,11 +2460,6 @@
       "address": "1427:0232",
       "kind": "plate",
       "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x4a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:00d4",
-      "kind": "pre",
-      "text": "This is likely handrolled assembly"
     },
     {
       "address": "1427:0060",
