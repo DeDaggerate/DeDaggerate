@@ -27,6 +27,9 @@ import ghidra.app.script.GhidraScript;
 
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSetView;
+import ghidra.program.model.address.SegmentedAddress;
+
+import ghidra.program.model.scalar.Scalar;
 
 import ghidra.program.model.data.Array;
 import ghidra.program.model.data.BuiltInDataType;
@@ -61,12 +64,17 @@ import ghidra.program.model.symbol.ReferenceManager;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.symbol.Symbol;
 import ghidra.program.model.symbol.SymbolTable;
+import ghidra.program.model.symbol.SymbolType;
 
 import ghidra.util.UniversalID;
 
 public class ExportSources extends GhidraScript {
 
 	private static final String MANUAL_ASM_TAG = "MANUAL_ASM";
+
+	private static final String MODE_ALL = "all";
+	private static final String MODE_C   = "c";
+	private static final String MODE_ASM = "asm";
 
 	private static final String[] LOADER_CATEGORY_PREFIXES = {
 			"/DOS", "/PE", "/MZ", "/LE", "/LX", "/ELF", "/MachO", "/Windows"
@@ -78,7 +86,10 @@ public class ExportSources extends GhidraScript {
 	private DecompInterface decompiler;
 	private Pattern includePattern;
 	private String basename;
+	private String projectPrefix;
 	private MemoryModel memoryModel;
+
+	private static String decorateWatcall(String functionName) { return functionName + "_"; }
 
 	private enum MemoryModel { SMALL, LARGE, FLAT }
 
@@ -94,13 +105,22 @@ public class ExportSources extends GhidraScript {
 	public void run() throws Exception {
 		String[] arguments = getScriptArgs();
 		if(arguments.length < 3) {
-			printerr("usage: ExportSources <out_dir> <basename> <include_glob>");
+			printerr("usage: ExportSources <out_dir> <basename> <include_glob> [mode=all|c|asm]");
 			return;
 		}
 
 		Path output = Paths.get(arguments[0]);
 		basename = arguments[1];
+		projectPrefix = basename + "_";
 		includePattern = globToRegex(arguments[2]);
+		String mode = arguments.length >= 4 ? arguments[3] : MODE_ALL;
+		if(!MODE_ALL.equals(mode) && !MODE_C.equals(mode) && !MODE_ASM.equals(mode)) {
+			printerr("unknown mode: " + mode + " (expected all|c|asm)");
+			return;
+		}
+
+		boolean emitCAndHeader = MODE_ALL.equals(mode) || MODE_C.equals(mode);
+		boolean emitAsm        = MODE_ALL.equals(mode) || MODE_ASM.equals(mode);
 
 		Files.createDirectories(output);
 
@@ -118,20 +138,29 @@ public class ExportSources extends GhidraScript {
 
 			collect();
 
-			String cSource = emitC();
-			String asmSource = emitAsm();
-			String header = emitHeader();
+			String cSource = emitCAndHeader ? emitC() : null;
+			String asmSource = emitAsm ? emitAsm() : null;
+			String header = emitCAndHeader ? emitHeader() : null;
 
-			atomicWrite(output.resolve(basename + ".h"), header);
-			atomicWrite(output.resolve(basename + ".c"), cSource);
-			atomicWrite(output.resolve(basename + ".asm"), asmSource);
+			if(emitCAndHeader) {
+				atomicWrite(output.resolve(basename + ".h"), header);
+				atomicWrite(output.resolve(basename + ".c"), cSource);
+			}
+			if(emitAsm) {
+				atomicWrite(output.resolve(basename + ".asm"), asmSource);
+			}
 
-			println(
-					"wrote " +
-					cFunctions.size() + " c funcs, " +
-					asmFunctions.size() + " asm funcs, " +
-					externData.size() + " externs, " +
-					actuallyInlined.size() + " inlined strings");
+			StringBuilder summary = new StringBuilder("wrote ");
+			if(emitCAndHeader) {
+				summary.append(cFunctions.size()).append(" c funcs, ")
+						.append(externData.size()).append(" externs, ")
+						.append(actuallyInlined.size()).append(" inlined strings");
+			}
+
+			if(emitCAndHeader && emitAsm) summary.append(", ");
+			if(emitAsm) summary.append(asmFunctions.size()).append(" asm funcs");
+
+			println(summary.toString());
 		}
 		finally {
 			decompiler.dispose();
@@ -213,7 +242,18 @@ public class ExportSources extends GhidraScript {
 
 		stringBuilder.append("#ifndef ").append(guard).append('\n');
 		stringBuilder.append("#define ").append(guard).append("\n\n");
-		stringBuilder.append("#include <stddef.h>\n#include <stdint.h>\n\n");
+		stringBuilder.append("#include <stddef.h>\n");
+		stringBuilder.append("#include <stdint.h>\n");
+		stringBuilder.append("#include <stdio.h>\n");
+		stringBuilder.append("#include <dos.h>\n");
+		stringBuilder.append("#include <stdbool.h>\n\n");
+
+		stringBuilder.append("typedef struct find_t find_t;\n\n");
+
+		stringBuilder.append("typedef unsigned char  byte;\n");
+		stringBuilder.append("typedef unsigned short word, ushort, uint;\n");
+		stringBuilder.append("typedef unsigned long  dword, ulong;\n");
+		stringBuilder.append("typedef void code;\n\n");
 
 		appendUserTypes(stringBuilder);
 
@@ -270,7 +310,7 @@ public class ExportSources extends GhidraScript {
 			}
 			else if(type instanceof Structure) {
 				Structure s = (Structure) type;
-				stringBuilder.append("struct ").append(s.getName()).append(" {\n");
+				stringBuilder.append("typedef struct ").append(s.getName()).append(" {\n");
 
 				for(DataTypeComponent typeComponent : s.getDefinedComponents()) {
 					String fieldName = typeComponent.getFieldName() != null ? typeComponent.getFieldName() : ("field_" + typeComponent.getOffset());
@@ -283,30 +323,29 @@ public class ExportSources extends GhidraScript {
 					stringBuilder.append('\n');
 				}
 
-				if(!s.isPackingEnabled()) stringBuilder.append("} __attribute__((packed));\n\n");
-				else stringBuilder.append("};\n\n");
+				stringBuilder.append("} ").append(s.getName()).append(";\n\n");
 			}
 			else if(type instanceof Union) {
 				Union union = (Union) type;
-				stringBuilder.append("union ").append(union.getName()).append(" {\n");
+				stringBuilder.append("typedef union ").append(union.getName()).append(" {\n");
 
 				for(DataTypeComponent typeComponent : union.getDefinedComponents()) {
 					String fieldName = typeComponent.getFieldName() != null ? typeComponent.getFieldName() : ("field_" + typeComponent.getOrdinal());
 					stringBuilder.append("\t").append(renderTypeForDecl(typeComponent.getDataType(), fieldName)).append(";\n");
 				}
 
-				stringBuilder.append("};\n\n");
+				stringBuilder.append("} ").append(union.getName()).append(";\n\n");
 			}
 			else if(type instanceof Enum) {
 				Enum enumeration = (Enum) type;
-				stringBuilder.append("enum ").append(enumeration.getName()).append(" {\n");
+				stringBuilder.append("typedef enum ").append(enumeration.getName()).append(" {\n");
 				String[] names = enumeration.getNames();
 				for(int i = 0; i < names.length; i++) {
 					stringBuilder.append("\t").append(names[i]).append(" = ").append(enumeration.getValue(names[i]));
 					if(i < names.length - 1) stringBuilder.append(',');
 					stringBuilder.append('\n');
 				}
-				stringBuilder.append("};\n\n");
+				stringBuilder.append("} ").append(enumeration.getName()).append(";\n\n");
 			}
 		}
 	}
@@ -370,34 +409,144 @@ public class ExportSources extends GhidraScript {
 				}
 			}
 
+			body = normalizeDecompiledBody(body);
+
 			stringBuilder.append(body);
 			if(!body.endsWith("\n")) stringBuilder.append('\n');
 			stringBuilder.append('\n');
 		}
 
+		appendGlobalDefinitions(stringBuilder);
+
 		return stringBuilder.toString();
 	}
+
+	private void appendGlobalDefinitions(StringBuilder stringBuilder) {
+		boolean anyEmitted = false;
+		StringBuilder section = new StringBuilder();
+
+		for(Data data : externData) {
+			Symbol primary = symbolTable.getPrimarySymbol(data.getMinAddress());
+
+			String name = primary != null ? primary.getName() : ("DAT_" + data.getMinAddress());
+			if(!name.startsWith(projectPrefix)) continue;
+
+			section.append(renderDefinition(data, name)).append(";\n");
+			anyEmitted = true;
+		}
+
+		for(Map.Entry<String, Data> entry : inlineCandidateData.entrySet()) {
+			String name = entry.getKey();
+			if(actuallyInlined.contains(name)) continue;
+			if(!name.startsWith(projectPrefix)) continue;
+
+			Data data = entry.getValue();
+			String literal = inlineCandidateLiterals.get(name);
+			int length = data.getLength();
+			String dimension = length > 0 ? "[" + length + "]" : "[]";
+
+			section.append("char ").append(name).append(dimension);
+
+			if(literal != null) section.append(" = ").append(literal);
+
+			section.append(";\n");
+			anyEmitted = true;
+		}
+
+		if(anyEmitted) {
+			stringBuilder.append("\n");
+			stringBuilder.append(section);
+			stringBuilder.append('\n');
+		}
+	}
+
+	private static final Pattern _CSPEC_KEYWORD = Pattern.compile("\\b__(?:cdecl|stdcall|watcall)16(?:near|far)?\\b\\s*");
+	private static final Pattern _PARTIAL_FIELD = Pattern.compile("([A-Za-z_][A-Za-z_0-9]*)\\._([0-9]+)_([0-9]+)_");
+
+	private static String normalizeDecompiledBody(String body) {
+		body = _CSPEC_KEYWORD.matcher(body).replaceAll("");
+
+		Matcher matcher = _PARTIAL_FIELD.matcher(body);
+		StringBuffer stringBuffer = new StringBuffer();
+		while(matcher.find()) {
+			String var = matcher.group(1);
+			int offset = Integer.parseInt(matcher.group(2));
+			int size  = Integer.parseInt(matcher.group(3));
+			String castType;
+			switch(size) {
+				case 1: {
+					castType = "byte";
+					break;
+				}
+
+				case 2: {
+					castType = "word";
+					break;
+				}
+
+				case 4: {
+					castType = "dword";
+					break;
+				}
+
+				default: {
+					castType = null;
+					break;
+				}
+			}
+
+			if(castType == null) {
+				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(matcher.group(0)));
+			}
+			else {
+				String replacement = "(*(" + castType + " *)((char *)&" + var + " + " + offset + "))";
+				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(replacement));
+			}
+		}
+
+		matcher.appendTail(stringBuffer);
+
+		return stringBuffer.toString();
+	}
+
+	private String renderDefinition(Data data, String identifier) {
+		DataType type = data.getDataType();
+		if(isStringTypeName(type)) {
+			int length = data.getLength();
+			return length > 0
+					? "char " + identifier + "[" + length + "]"
+					: "char " + identifier + "[]";
+		}
+
+		return renderTypeForDecl(type, identifier);
+	}
+
+	private final Set<String> asmDefinedDecorated = new HashSet<>();
+
+	private final Map<String, String> asmExterns = new LinkedHashMap<>();
 
 	private String emitAsm() {
 		StringBuilder stringBuilder = new StringBuilder();
 
 		switch(memoryModel) {
 			case FLAT: {
-				stringBuilder.append("\t.386\n\t.model flat\n\n");
+				stringBuilder.append("\t.386p\n\t.model flat\n\n");
 				break;
 			}
 
 			case LARGE: {
-				stringBuilder.append("\t.8086\n\t.model large\n\n");
+				stringBuilder.append("\t.386\n\t.model large\n\n");
 				break;
 			}
 
 			case SMALL:
 			default: {
-				stringBuilder.append("\t.8086\n\t.model small\n\n");
+				stringBuilder.append("\t.386\n\t.model small\n\n");
 				break;
 			}
 		}
+
+		for(Function function : asmFunctions) asmDefinedDecorated.add(decorateWatcall(function.getName()));
 
 		TreeMap<String, List<Function>> bySegment = new TreeMap<>();
 		for(Function function : asmFunctions) {
@@ -405,43 +554,59 @@ public class ExportSources extends GhidraScript {
 			bySegment.computeIfAbsent(seg, k -> new ArrayList<>()).add(function);
 		}
 
+		StringBuilder bodyBuffer = new StringBuilder();
 		for(Map.Entry<String, List<Function>> entry : bySegment.entrySet()) {
 			String segName = entry.getKey();
 			List<Function> functions = entry.getValue();
 			functions.sort(Comparator.comparing(Function::getEntryPoint));
 
 			if(memoryModel == MemoryModel.FLAT) {
-				stringBuilder.append("_TEXT SEGMENT PUBLIC 'CODE' USE32\n\n");
+				bodyBuffer.append("_TEXT SEGMENT PUBLIC 'CODE' USE32\n\n");
 			}
 			else {
-				stringBuilder.append(segName).append(" SEGMENT BYTE PUBLIC 'CODE' USE16\n");
-				stringBuilder.append("\tASSUME CS:").append(segName).append(", DS:DGROUP\n\n");
+				bodyBuffer.append(segName).append(" SEGMENT BYTE PUBLIC 'CODE' USE16\n");
+				bodyBuffer.append("\tASSUME CS:").append(segName).append(", DS:DGROUP\n\n");
 			}
 
 			for(Function function : functions) {
-				emitAsmFunction(stringBuilder, function);
-				stringBuilder.append('\n');
+				bodyBuffer.append("PUBLIC ").append(decorateWatcall(function.getName())).append('\n');
 			}
 
-			if(memoryModel == MemoryModel.FLAT) stringBuilder.append("_TEXT ENDS\n\n");
-			else stringBuilder.append(segName).append(" ENDS\n\n");
+			bodyBuffer.append('\n');
+
+			for(Function function : functions) {
+				emitAsmFunction(bodyBuffer, function);
+				bodyBuffer.append('\n');
+			}
+
+			if(memoryModel == MemoryModel.FLAT) bodyBuffer.append("_TEXT ENDS\n\n");
+			else bodyBuffer.append(segName).append(" ENDS\n\n");
 		}
 
+		if(!asmExterns.isEmpty()) {
+			for(Map.Entry<String, String> e : asmExterns.entrySet()) {
+				stringBuilder.append("EXTRN ").append(e.getKey()).append(":").append(e.getValue()).append('\n');
+			}
+
+			stringBuilder.append('\n');
+		}
+
+		stringBuilder.append(bodyBuffer);
 		stringBuilder.append("\tEND\n");
 
 		return stringBuilder.toString();
 	}
 
 	private void emitAsmFunction(StringBuilder stringBuilder, Function function) {
-		String name = function.getName();
+		String decoratedName = decorateWatcall(function.getName());
 		String platePre = program.getListing().getComment(CommentType.PLATE, function.getEntryPoint());
 
 		if(platePre != null && !platePre.isEmpty()) {
 			for(String line : platePre.split("\n")) stringBuilder.append("; ").append(line).append('\n');
 		}
 
-		String procedureTag = memoryModel == MemoryModel.FLAT ? "NEAR" : "NEAR";
-		stringBuilder.append(name).append(" PROC ").append(procedureTag).append('\n');
+		String procFlavor = memoryModel == MemoryModel.FLAT ? "NEAR" : "NEAR";
+		stringBuilder.append(decoratedName).append(" PROC ").append(procFlavor).append('\n');
 
 		AddressSetView body = function.getBody();
 		Listing listing = program.getListing();
@@ -450,7 +615,7 @@ public class ExportSources extends GhidraScript {
 			Instruction instruction = it.next();
 
 			for(Symbol symbol : symbolTable.getSymbols(instruction.getAddress())) {
-				if(symbol.getName().equals(name)) continue;
+				if(symbol.getName().equals(function.getName())) continue;
 
 				String symbolName = symbol.getName();
 				if(symbolName.startsWith("LAB_") || symbolName.startsWith("SUB_") || symbol.getSource() == SourceType.USER_DEFINED) {
@@ -459,14 +624,39 @@ public class ExportSources extends GhidraScript {
 				}
 			}
 
-			stringBuilder.append('\t').append(instruction.getMnemonicString().toUpperCase());
+			String mnemonic = instruction.getMnemonicString().toUpperCase();
+			int dot = mnemonic.indexOf('.');
+			String prefix = null;
+			if(dot > 0) {
+				prefix = mnemonic.substring(dot + 1);
+				mnemonic = mnemonic.substring(0, dot);
+			}
 
-			int operands = instruction.getNumOperands();
-			if(operands > 0) {
-				stringBuilder.append(' ');
-				for(int i = 0; i < operands; i++) {
-					if(i > 0) stringBuilder.append(", ");
-					stringBuilder.append(masmifyOperand(instruction.getDefaultOperandRepresentation(i)));
+			if(("JMPF".equals(mnemonic) || "CALLF".equals(mnemonic)) && isLiteralFarTarget(instruction)) {
+				appendRawBytes(stringBuilder, instruction);
+
+				String eolForRaw = listing.getComment(CommentType.EOL, instruction.getAddress());
+				if(eolForRaw != null && !eolForRaw.isEmpty()) stringBuilder.append("\t; ").append(eolForRaw);
+
+				stringBuilder.append("\t; ").append(mnemonic).append(' ').append(instruction.getDefaultOperandRepresentation(0));
+				stringBuilder.append('\n');
+
+				continue;
+			}
+
+			boolean implicitOperands = isStringOp(mnemonic);
+
+			if(prefix != null) stringBuilder.append('\t').append(prefix).append(' ').append(mnemonic);
+			else stringBuilder.append('\t').append(mnemonic);
+
+			if(!implicitOperands) {
+				int operands = instruction.getNumOperands();
+				if(operands > 0) {
+					stringBuilder.append(' ');
+					for(int i = 0; i < operands; i++) {
+						if(i > 0) stringBuilder.append(", ");
+						stringBuilder.append(renderOperand(instruction, i, function));
+					}
 				}
 			}
 
@@ -476,7 +666,182 @@ public class ExportSources extends GhidraScript {
 			stringBuilder.append('\n');
 		}
 
-		stringBuilder.append(name).append(" ENDP\n");
+		stringBuilder.append(decoratedName).append(" ENDP\n");
+	}
+
+	private String renderOperand(Instruction instruction, int operandIndex, Function inFunction) {
+		String text = instruction.getDefaultOperandRepresentation(operandIndex);
+		String mnemonic = instruction.getMnemonicString().toUpperCase();
+
+		Reference[] references = instruction.getOperandReferences(operandIndex);
+		for(Reference reference : references) {
+			if(!reference.isPrimary()) continue;
+
+			Address target = reference.getToAddress();
+			if(target == null) continue;
+
+			Symbol symbol = symbolTable.getPrimarySymbol(target);
+			if(symbol == null) continue;
+
+			RefType referenceType = reference.getReferenceType();
+
+			String symbolName = symbol.getName();
+			if(!isValidAsmIdentifier(symbolName)) continue;
+
+			if(referenceType.isFlow() && !referenceType.isComputed()) {
+				if(symbol.getSymbolType() == SymbolType.FUNCTION) {
+					String decorated = decorateWatcall(symbolName);
+					if(!asmDefinedDecorated.contains(decorated)) {
+						asmExterns.putIfAbsent(decorated, "NEAR");
+					}
+
+					return decorated;
+				}
+
+				if(symbol.getSource() == SourceType.DEFAULT && !targetIsInEmittedAsm(target)) {
+					return formatFarAddress(target);
+				}
+
+				return symbolName;
+			}
+
+			String renderedName = symbol.getSymbolType() == SymbolType.FUNCTION
+					? decorateWatcall(symbolName)
+					: symbolName;
+
+			boolean isMemoryOperand = text.contains("[");
+			if(referenceType.isData()) {
+				boolean isDefinedHere = symbol.getSymbolType() == SymbolType.FUNCTION && asmDefinedDecorated.contains(renderedName);
+				if(!isDefinedHere) {
+					asmExterns.putIfAbsent(renderedName, inferDataExternType(symbol));
+				}
+
+				if(isMemoryOperand) {
+					return substituteAddressInOperand(text, renderedName);
+				}
+
+				Scalar immediate = instruction.getScalar(operandIndex);
+				if(immediate != null && target instanceof SegmentedAddress) {
+					SegmentedAddress segTarget = (SegmentedAddress) target;
+
+					long val = immediate.getUnsignedValue();
+					if(val == segTarget.getSegment()) return "SEG " + renderedName;
+					if(val == segTarget.getSegmentOffset()) return "OFFSET " + renderedName;
+				}
+
+				return "OFFSET " + renderedName;
+			}
+		}
+
+		return masmifyOperand(text);
+	}
+
+	private static final Set<String> STRING_OPS = new HashSet<>(java.util.Arrays.asList(
+			"LODSB", "LODSW", "LODSD",
+			"STOSB", "STOSW", "STOSD",
+			"MOVSB", "MOVSW", "MOVSD",
+			"CMPSB", "CMPSW", "CMPSD",
+			"SCASB", "SCASW", "SCASD",
+			"INSB",  "INSW",  "INSD",
+			"OUTSB", "OUTSW", "OUTSD"));
+
+	private static boolean isStringOp(String mnemonic) { return STRING_OPS.contains(mnemonic); }
+
+	private static boolean isValidAsmIdentifier(String name) {
+		if(name == null || name.isEmpty()) return false;
+
+		char ch = name.charAt(0);
+		if(!Character.isLetter(ch) && ch != '_' && ch != '$' && ch != '@') return false;
+
+		for(int i = 1; i < name.length(); i++) {
+			char c = name.charAt(i);
+			if(!Character.isLetterOrDigit(c) && c != '_' && c != '$' && c != '@') return false;
+		}
+
+		return true;
+	}
+
+	private boolean isLiteralFarTarget(Instruction instruction) {
+		Reference[] references = instruction.getReferencesFrom();
+		for(Reference reference : references) {
+			Address address = reference.getToAddress();
+			if(address == null) continue;
+
+			Symbol symbol = symbolTable.getPrimarySymbol(address);
+			if(symbol != null && symbol.getSource() != SourceType.DEFAULT) return false;
+			if(symbol != null && targetIsInEmittedAsm(address)) return false;
+		}
+
+		return true;
+	}
+
+	private void appendRawBytes(StringBuilder stringBuilder, Instruction instruction) {
+		try {
+			byte[] bytes = instruction.getBytes();
+			stringBuilder.append("\tDB ");
+
+			for(int i = 0; i < bytes.length; i++) {
+				if(i > 0) stringBuilder.append(", ");
+
+				int byteValue = bytes[i] & 0xff;
+
+				String prefix = (byteValue >= 0xA0) ? "0" : "";
+				stringBuilder.append(prefix).append(String.format("%02X", byteValue)).append('h');
+			}
+		}
+		catch(Exception e) {
+			stringBuilder.append("\t; <bytes unavailable: ").append(e.getMessage()).append(">");
+		}
+	}
+
+	private boolean targetIsInEmittedAsm(Address addr) {
+		for(Function fn : asmFunctions) {
+			if(fn.getBody().contains(addr)) return true;
+		}
+
+		return false;
+	}
+
+	private static String formatFarAddress(Address address) {
+		if(address instanceof SegmentedAddress) {
+			SegmentedAddress segmentedAddress = (SegmentedAddress) address;
+			return String.format("0%04Xh:0%04Xh", segmentedAddress.getSegment(), segmentedAddress.getSegmentOffset());
+		}
+
+		return String.format("0%Xh", address.getOffset());
+	}
+
+	private boolean inFunctionOwnsSymbol(Function fn, Symbol sym) {
+		Address functionEntry = fn.getEntryPoint();
+		Address symbolAddress = sym.getAddress();
+
+		return segmentKey(functionEntry).equals(segmentKey(symbolAddress));
+	}
+
+	private String inferDataExternType(Symbol sym) {
+		Data data = program.getListing().getDataAt(sym.getAddress());
+		if(data == null) return "BYTE";
+
+		int length = data.getLength();
+		switch(length) {
+			case 1: return "BYTE";
+			case 2: return "WORD";
+			case 4: return "DWORD";
+			default: return "BYTE";
+		}
+	}
+
+	private static final Pattern OPERAND_NUMERIC = Pattern.compile("\\b(?:0x[0-9A-Fa-f]+|[0-9][0-9A-Fa-f]*h|[0-9]+)\\b");
+
+	private String substituteAddressInOperand(String text, String symbolName) {
+		String masmified = masmifyOperand(text);
+		Matcher matcher = OPERAND_NUMERIC.matcher(masmified);
+
+		if(matcher.find()) {
+			return masmified.substring(0, matcher.start()) + symbolName + masmified.substring(matcher.end());
+		}
+
+		return masmified;
 	}
 
 	private static final Pattern HEX_LITERAL = Pattern.compile("\\b0x([0-9A-Fa-f]+)\\b");
@@ -689,7 +1054,10 @@ public class ExportSources extends GhidraScript {
 		StringBuilder arraySuffix = new StringBuilder();
 		while(type instanceof Array) {
 			Array array = (Array) type;
-			arraySuffix.append('[').append(array.getNumElements()).append(']');
+			int dimension = array.getNumElements();
+
+			if(dimension > 0) arraySuffix.append('[').append(dimension).append(']');
+			else arraySuffix.append("[]");
 			type = array.getDataType();
 		}
 
