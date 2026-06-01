@@ -137,7 +137,7 @@
     },
     {
       "address": "1000:0a55",
-      "name": "printf_",
+      "name": "printf",
       "calling_convention": "__cdecl",
       "return_type": "/void",
       "parameters": [
@@ -149,7 +149,7 @@
     },
     {
       "address": "1000:0a75",
-      "name": "__clib_stdio_maybe_fflush",
+      "name": "fflush",
       "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": [
@@ -161,7 +161,7 @@
     },
     {
       "address": "1000:0a82",
-      "name": "getch_"
+      "name": "getch"
     },
     {
       "address": "1000:0bef",
@@ -185,7 +185,7 @@
     },
     {
       "address": "1000:0c06",
-      "name": "fopen_",
+      "name": "fopen",
       "calling_convention": "__watcall16",
       "return_type": "/preprocessed-small.h/FILE *",
       "parameters": [
@@ -201,7 +201,7 @@
     },
     {
       "address": "1000:0c89",
-      "name": "fgets_",
+      "name": "fgets",
       "calling_convention": "__watcall16",
       "return_type": "/char *",
       "parameters": [
@@ -220,8 +220,12 @@
       ]
     },
     {
+      "address": "1000:0ce6",
+      "name": "strlen"
+    },
+    {
       "address": "1000:0cff",
-      "name": "strnicmp_",
+      "name": "strnicmp",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -241,7 +245,7 @@
     },
     {
       "address": "1000:0d48",
-      "name": "ftell_",
+      "name": "ftell",
       "calling_convention": "__watcall16",
       "return_type": "/long",
       "parameters": [
@@ -252,8 +256,12 @@
       ]
     },
     {
+      "address": "1000:0d8e",
+      "name": "fclose"
+    },
+    {
       "address": "1000:0eb9",
-      "name": "exit_",
+      "name": "exit",
       "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": [
@@ -265,7 +273,7 @@
     },
     {
       "address": "1000:0eee",
-      "name": "sprintf_",
+      "name": "sprintf",
       "calling_convention": "__cdecl",
       "return_type": "/int",
       "parameters": [
@@ -280,12 +288,20 @@
       ]
     },
     {
+      "address": "1000:0f1e",
+      "name": "strcpy"
+    },
+    {
       "address": "1000:0f5d",
-      "name": "strcat_"
+      "name": "strcat"
+    },
+    {
+      "address": "1000:0f90",
+      "name": "_dos_findfirst"
     },
     {
       "address": "1000:0fc1",
-      "name": "strncmp_",
+      "name": "strncmp",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -305,7 +321,7 @@
     },
     {
       "address": "1000:1031",
-      "name": "fseek_",
+      "name": "fseek",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -325,7 +341,7 @@
     },
     {
       "address": "1000:1130",
-      "name": "malloc_",
+      "name": "malloc",
       "calling_convention": "__watcall16",
       "return_type": "/byte *",
       "parameters": [
@@ -337,7 +353,7 @@
     },
     {
       "address": "1000:11e0",
-      "name": "unsure_maybe_fread_0",
+      "name": "fread",
       "calling_convention": "__watcall16",
       "return_type": "/uint",
       "parameters": [
@@ -361,7 +377,7 @@
     },
     {
       "address": "1000:1356",
-      "name": "unsure_maybe_fread_1",
+      "name": "fwrite",
       "calling_convention": "__watcall16",
       "return_type": "/uint",
       "parameters": [
@@ -384,8 +400,12 @@
       ]
     },
     {
+      "address": "1000:14dd",
+      "name": "strupr"
+    },
+    {
       "address": "1000:14fb",
-      "name": "strchr_",
+      "name": "strchr",
       "calling_convention": "__watcall16",
       "return_type": "/char *",
       "parameters": [
@@ -403,12 +423,16 @@
       ]
     },
     {
+      "address": "1000:1529",
+      "name": "memset"
+    },
+    {
       "address": "1000:1546",
-      "name": "strncpy_"
+      "name": "strncpy"
     },
     {
       "address": "1000:156f",
-      "name": "stricmp_",
+      "name": "stricmp",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -424,7 +448,7 @@
     },
     {
       "address": "1000:15ab",
-      "name": "atoi_",
+      "name": "atoi",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -436,7 +460,7 @@
     },
     {
       "address": "1000:1600",
-      "name": "unlink_",
+      "name": "unlink",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -451,7 +475,7 @@
     },
     {
       "address": "1000:161b",
-      "name": "rmdir_",
+      "name": "rmdir",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -463,7 +487,7 @@
     },
     {
       "address": "1000:1636",
-      "name": "mkdir_",
+      "name": "mkdir",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -478,7 +502,7 @@
     },
     {
       "address": "1000:1651",
-      "name": "getcwd_",
+      "name": "getcwd",
       "calling_convention": "__watcall16",
       "return_type": "/char *",
       "parameters": [
@@ -494,7 +518,7 @@
     },
     {
       "address": "1000:16d1",
-      "name": "spawnv_",
+      "name": "spawnv",
       "calling_convention": "__cdecl",
       "return_type": "/int",
       "parameters": [
@@ -514,7 +538,7 @@
     },
     {
       "address": "1000:16ec",
-      "name": "setenv_",
+      "name": "setenv",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -534,7 +558,7 @@
     },
     {
       "address": "1000:198f",
-      "name": "toupper_"
+      "name": "toupper"
     },
     {
       "address": "1000:1c8e",
@@ -621,7 +645,7 @@
     },
     {
       "address": "1000:30c6",
-      "name": "unsure_maybe_convert_dos_to_errno",
+      "name": "__clib_doserr_to_errno",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -645,7 +669,7 @@
     },
     {
       "address": "1000:318f",
-      "name": "spawnve_",
+      "name": "spawnve",
       "calling_convention": "__watcall16",
       "return_type": "/int",
       "parameters": [
@@ -694,14 +718,34 @@
     },
     {
       "address": "1000:3866",
-      "name": "unsure_maybe_get_errno",
+      "name": "__clib_get_errno_ptr",
       "calling_convention": "__watcall16",
       "return_type": "/int *",
       "parameters": []
     },
     {
+      "address": "1000:386e",
+      "name": "isatty"
+    },
+    {
+      "address": "1000:391a",
+      "name": "utoa"
+    },
+    {
+      "address": "1000:3960",
+      "name": "itoa"
+    },
+    {
+      "address": "1000:39c7",
+      "name": "ultoa"
+    },
+    {
+      "address": "1000:3a1b",
+      "name": "ltoa"
+    },
+    {
       "address": "1000:3b7d",
-      "name": "unsure_maybe_argv_concatenate",
+      "name": "__clib_process_argv_concat",
       "calling_convention": "__watcall16",
       "return_type": "/uint",
       "parameters": [
@@ -736,8 +780,16 @@
       ]
     },
     {
+      "address": "1000:3eb2",
+      "name": "_dos_allocmem"
+    },
+    {
+      "address": "1000:3ecc",
+      "name": "_dos_freemem"
+    },
+    {
       "address": "1000:4006",
-      "name": "unsure_maybe_getenv",
+      "name": "getenv",
       "calling_convention": "__watcall16",
       "return_type": "/char *",
       "parameters": [
@@ -770,6 +822,9 @@
     {
       "address": "1427:0085",
       "name": "dagger_restore_int24_handler",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [],
       "tags": [
         "MANUAL_ASM"
       ]
@@ -789,7 +844,10 @@
       "name": "dagger_restore_int33_hander",
       "calling_convention": "__watcall16",
       "return_type": "/void",
-      "parameters": []
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
     },
     {
       "address": "1427:00d4",
@@ -848,7 +906,7 @@
     },
     {
       "address": "1427:016d",
-      "name": "unsure_some_string_replace",
+      "name": "dagger_string_replace",
       "calling_convention": "__watcall16",
       "return_type": "/void",
       "parameters": [
@@ -875,17 +933,23 @@
     },
     {
       "address": "1427:01e0",
-      "name": "unsure_some_smartdrv_nonsense",
+      "name": "dagger_set_smartdrv_mode",
+      "calling_convention": "__watcall16",
+      "return_type": "/void",
+      "parameters": [],
       "tags": [
         "MANUAL_ASM"
       ]
     },
     {
       "address": "1427:0232",
-      "name": "unsure_more_smartdrv_nonsense",
+      "name": "dagger_restore_smartdrv_mode",
       "calling_convention": "__watcall16",
       "return_type": "/void",
-      "parameters": []
+      "parameters": [],
+      "tags": [
+        "MANUAL_ASM"
+      ]
     }
   ],
   "symbols": [
@@ -961,7 +1025,7 @@
     },
     {
       "address": "1000:0876",
-      "name": "prt_10876_3831e62a",
+      "name": "prt_10876_fdcdfc1c",
       "namespace": "dagger_real_main::override"
     },
     {
@@ -987,17 +1051,21 @@
     {
       "address": "1000:1093",
       "name": "failure",
-      "namespace": "fseek_"
+      "namespace": "fseek"
     },
     {
       "address": "1000:1128",
       "name": "success",
-      "namespace": "fseek_"
+      "namespace": "fseek"
     },
     {
       "address": "1000:3226",
       "name": "error_out",
-      "namespace": "spawnve_"
+      "namespace": "spawnve"
+    },
+    {
+      "address": "1427:0000",
+      "name": "dagger_global_windows_version_minor"
     },
     {
       "address": "1427:0001",
@@ -1309,15 +1377,15 @@
     },
     {
       "address": "144d:09d0",
-      "name": "unsure_maybe_stdin"
-    },
-    {
-      "address": "144d:09d5",
-      "name": "unsure_maybe_some_global_fptr"
+      "name": "__iob"
     },
     {
       "address": "144d:0b30",
       "name": "__clib_unsure_possibly_environ"
+    },
+    {
+      "address": "144d:0b6a",
+      "name": "__clib_blksz"
     },
     {
       "address": "144d:0bc8",
@@ -1337,7 +1405,7 @@
     },
     {
       "address": "144d:0e48",
-      "name": "unsure_some_virtual_memory_file_buffer"
+      "name": "dagger_global_virtual_memory_file_buffer"
     },
     {
       "address": "144d:0ee8",
@@ -1393,7 +1461,7 @@
     },
     {
       "address": "144d:1748",
-      "name": "unsure_probably_windows_check_return"
+      "name": "dagger_global_windows_version_major"
     },
     {
       "address": "144d:174a",
@@ -1409,14 +1477,26 @@
     },
     {
       "address": "144d:1779",
-      "name": "__dagger_global_startup_scratch_buffer_ahead"
+      "name": "dagger_global_failed_launch_listen_character"
     },
     {
       "address": "144d:177a",
       "name": "dagger_global_config_scratch_buffer"
+    },
+    {
+      "address": "144d:17d4",
+      "name": "__clib_argc"
+    },
+    {
+      "address": "144d:17d6",
+      "name": "__clib_argv"
     }
   ],
   "data": [
+    {
+      "address": "1427:0000",
+      "type": "/byte"
+    },
     {
       "address": "1427:0001",
       "type": "/char[87]"
@@ -1512,6 +1592,10 @@
     {
       "address": "144d:0198",
       "type": "/string"
+    },
+    {
+      "address": "144d:01ba",
+      "type": "/TerminatedCString"
     },
     {
       "address": "144d:01c0",
@@ -1723,43 +1807,43 @@
     },
     {
       "address": "144d:09d0",
-      "type": "/preprocessed-small.h/FILE *"
-    },
-    {
-      "address": "144d:09d5",
-      "type": "/preprocessed-small.h/FILE *"
+      "type": "/preprocessed-small.h/FILE[3]"
     },
     {
       "address": "144d:0b30",
       "type": "/char *"
     },
     {
+      "address": "144d:0b6a",
+      "type": "/undefined2"
+    },
+    {
       "address": "144d:0bc8",
-      "type": "/undefined1"
+      "type": "/char[160]"
     },
     {
       "address": "144d:0c68",
-      "type": "/char[0]"
+      "type": "/char[160]"
     },
     {
       "address": "144d:0d08",
-      "type": "/char[0]"
+      "type": "/char[160]"
     },
     {
       "address": "144d:0da8",
-      "type": "/char[80]"
+      "type": "/char[160]"
     },
     {
       "address": "144d:0e48",
-      "type": "/char[0]"
+      "type": "/char[160]"
     },
     {
       "address": "144d:0ee8",
-      "type": "/char[30]"
+      "type": "/char[160]"
     },
     {
       "address": "144d:0f88",
-      "type": "/char[0]"
+      "type": "/char[160]"
     },
     {
       "address": "144d:1028",
@@ -1783,7 +1867,7 @@
     },
     {
       "address": "144d:173a",
-      "type": "/undefined2"
+      "type": "/int"
     },
     {
       "address": "144d:173e",
@@ -1823,61 +1907,24 @@
     },
     {
       "address": "144d:1779",
-      "type": "/char[1]"
+      "type": "/char"
     },
     {
       "address": "144d:177a",
       "type": "/char[80]"
+    },
+    {
+      "address": "144d:17d4",
+      "type": "/int"
+    },
+    {
+      "address": "144d:17d6",
+      "type": "/char * *"
     }
   ],
   "comments": [
     {
-      "address": "1000:0008",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:00da",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:02c1",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:02f3",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:0412",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
       "address": "1000:0468",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:0509",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:057c",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:0663",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1000:0743",
       "kind": "plate",
       "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
     },
@@ -2400,66 +2447,6 @@
       "address": "1000:424e",
       "kind": "plate",
       "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:0064",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x35).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:0085",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x25).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:00a0",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x35).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:00b9",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x25).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:00d4",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x09).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:00e3",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:00f4",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x52).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:0111",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x15).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:0151",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x16).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:016d",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; all callers are named runtime functions.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:01e0",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x4a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
-    },
-    {
-      "address": "1427:0232",
-      "kind": "plate",
-      "text": "Likely Watcom CRT internal; contains raw DOS INT (AH=0x4a).\nUser code routes DOS calls through clib wrappers; raw INT is a strong CRT signal.\nMarked by Watcom CRT Call-Graph Propagation. Rename to override."
     },
     {
       "address": "1427:0060",
