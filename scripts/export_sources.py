@@ -16,8 +16,8 @@ SCRIPTS = GHIDRA / "scripts"
 PROJECT_NAME = "DeDaggerate"
 
 TARGETS = {
-	"DAGGER.EXE": ("dagger/generated", "dagger", "dagger_*"),
-	"FALL.EXE": ("fall/generated",   "fall",   "fall_*"),
+	"DAGGER.EXE": ("dagger/src", "dagger", "dagger_*"),
+	"FALL.EXE": ("fall/src", "fall", "fall_*"),
 }
 
 MODE_ALL = "all"
@@ -33,8 +33,7 @@ def export_program(analyze: Path, program: str, mode: str) -> bool:
 	out_directory = PROJECT_ROOT / out_directory_relative
 	out_directory.mkdir(parents=True, exist_ok=True)
 
-	suffixes = { MODE_ALL: "{c,asm,h}", MODE_C: "{c,h}", MODE_ASM: "asm" }[mode]
-	print(f"[export-sources] {program} -> {out_directory}/{basename}.{suffixes} (include={include!r}, mode={mode})")
+	print(f"[export-sources] {program} -> {out_directory}/ (basename={basename}, include={include!r}, mode={mode})")
 
 	arguments = [
 		str(analyze), str(GHIDRA), PROJECT_NAME,
@@ -56,7 +55,7 @@ def export_program(analyze: Path, program: str, mode: str) -> bool:
 parser = argparse.ArgumentParser(description="Export decompiled C and/or asm sources from the Ghidra project.")
 mode_group = parser.add_mutually_exclusive_group()
 mode_group.add_argument("--asm-only", action="store_true", help="emit only the .asm file (skip .c and .h)")
-mode_group.add_argument("--c-only",   action="store_true", help="emit only the .c and .h files (skip .asm)")
+mode_group.add_argument("--c-only", action="store_true", help="emit only the .c and .h files (skip .asm)")
 parser.add_argument("programs", nargs="*", help="programs to export (default: all in TARGETS)")
 args = parser.parse_args()
 

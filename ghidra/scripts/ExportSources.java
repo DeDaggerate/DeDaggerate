@@ -1,5 +1,5 @@
-
-
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (C) 2026 Emily "TTG" Banerjee <prs.ttg+dedagger@pm.me>
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -53,27 +53,29 @@ import ghidra.program.model.listing.FunctionTag;
 import ghidra.program.model.listing.Instruction;
 import ghidra.program.model.listing.InstructionIterator;
 import ghidra.program.model.listing.Listing;
+import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.Program;
 
 import ghidra.program.model.mem.Memory;
 
 import ghidra.program.model.symbol.RefType;
 import ghidra.program.model.symbol.Reference;
-import ghidra.program.model.symbol.ReferenceIterator;
-import ghidra.program.model.symbol.ReferenceManager;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.symbol.Symbol;
+import ghidra.program.model.symbol.SymbolIterator;
 import ghidra.program.model.symbol.SymbolTable;
 import ghidra.program.model.symbol.SymbolType;
 
 import ghidra.util.UniversalID;
+
+import watcomdos.WatcomDecompileNormalizer;
 
 public class ExportSources extends GhidraScript {
 
 	private static final String MANUAL_ASM_TAG = "MANUAL_ASM";
 
 	private static final String MODE_ALL = "all";
-	private static final String MODE_C   = "c";
+	private static final String MODE_C = "c";
 	private static final String MODE_ASM = "asm";
 
 	private static final String[] LOADER_CATEGORY_PREFIXES = {
@@ -81,7 +83,6 @@ public class ExportSources extends GhidraScript {
 	};
 
 	private Program program;
-	private ReferenceManager referenceManager;
 	private SymbolTable symbolTable;
 	private DecompInterface decompiler;
 	private Pattern includePattern;
@@ -90,6 +91,7 @@ public class ExportSources extends GhidraScript {
 	private MemoryModel memoryModel;
 
 	private static String decorateWatcall(String functionName) { return functionName + "_"; }
+	private static String decorateCVariable(String variableName) { return "_" + variableName; }
 
 	private enum MemoryModel { SMALL, LARGE, FLAT }
 
@@ -99,7 +101,32 @@ public class ExportSources extends GhidraScript {
 
 	private final Map<String, String> inlineCandidateLiterals = new LinkedHashMap<>();
 	private final Map<String, Data> inlineCandidateData = new LinkedHashMap<>();
+	private final Map<String, LooseString> looseStrings = new LinkedHashMap<>();
 	private final Set<String> actuallyInlined = new HashSet<>();
+	private final TreeMap<Integer, DgroupSymbol> dgroupSymbols = new TreeMap<>();
+	private final Map<String, DgroupSymbol> dgroupSymbolsByName = new LinkedHashMap<>();
+
+	private final Set<Integer> codeSegments = new HashSet<>();
+
+	private static final class LooseString {
+		final Address address;
+		final int length;
+		LooseString(Address address, int length) {
+			this.address = address;
+			this.length = length;
+		}
+	}
+
+	private static final class DgroupSymbol {
+		final String name;
+		final int offset;
+		final int size;
+		DgroupSymbol(String name, int offset, int size) {
+			this.name = name;
+			this.offset = offset;
+			this.size = size;
+		}
+	}
 
 	@Override
 	public void run() throws Exception {
@@ -120,12 +147,11 @@ public class ExportSources extends GhidraScript {
 		}
 
 		boolean emitCAndHeader = MODE_ALL.equals(mode) || MODE_C.equals(mode);
-		boolean emitAsm        = MODE_ALL.equals(mode) || MODE_ASM.equals(mode);
+		boolean emitAsm = MODE_ALL.equals(mode) || MODE_ASM.equals(mode);
 
 		Files.createDirectories(output);
 
 		program = currentProgram;
-		referenceManager = program.getReferenceManager();
 		symbolTable = program.getSymbolTable();
 		memoryModel = detectMemoryModel(program.getCompilerSpec().getCompilerSpecID().getIdAsString());
 
@@ -138,27 +164,37 @@ public class ExportSources extends GhidraScript {
 
 			collect();
 
-			String cSource = emitCAndHeader ? emitC() : null;
-			String asmSource = emitAsm ? emitAsm() : null;
+			Map<String, String> cFiles = emitCAndHeader ? emitAllC() : null;
+			Map<String, String> asmFiles = emitAsm ? emitAllAsm() : null;
 			String header = emitCAndHeader ? emitHeader() : null;
 
 			if(emitCAndHeader) {
 				atomicWrite(output.resolve(basename + ".h"), header);
-				atomicWrite(output.resolve(basename + ".c"), cSource);
+				for(Map.Entry<String, String> entry : cFiles.entrySet()) {
+					atomicWrite(output.resolve(entry.getKey()), entry.getValue());
+				}
 			}
 			if(emitAsm) {
-				atomicWrite(output.resolve(basename + ".asm"), asmSource);
+				for(Map.Entry<String, String> entry : asmFiles.entrySet()) {
+					atomicWrite(output.resolve(entry.getKey()), entry.getValue());
+				}
+			}
+
+			if(emitCAndHeader && emitAsm) {
+				atomicWrite(output.resolve("sources.mk"), emitSourcesMk(cFiles, asmFiles));
 			}
 
 			StringBuilder summary = new StringBuilder("wrote ");
 			if(emitCAndHeader) {
-				summary.append(cFunctions.size()).append(" c funcs, ")
+				summary.append(cFunctions.size()).append(" c funcs (")
+						.append(cFiles.size()).append(" files), ")
 						.append(externData.size()).append(" externs, ")
 						.append(actuallyInlined.size()).append(" inlined strings");
 			}
 
 			if(emitCAndHeader && emitAsm) summary.append(", ");
-			if(emitAsm) summary.append(asmFunctions.size()).append(" asm funcs");
+			if(emitAsm) summary.append(asmFunctions.size()).append(" asm funcs (")
+					.append(asmFiles.size()).append(" files)");
 
 			println(summary.toString());
 		}
@@ -187,6 +223,11 @@ public class ExportSources extends GhidraScript {
 
 			if(isManualAsm) asmFunctions.add(function);
 			else cFunctions.add(function);
+
+			Address entry = function.getEntryPoint();
+			if(entry instanceof SegmentedAddress) {
+				codeSegments.add(((SegmentedAddress)entry).getSegment());
+			}
 		}
 
 		Listing listing = program.getListing();
@@ -234,6 +275,202 @@ public class ExportSources extends GhidraScript {
 
 			externData.add(data);
 		}
+
+		collectLooseStringSymbols();
+		buildDgroupSymbolMap();
+	}
+
+	private void buildDgroupSymbolMap() {
+		for(Data data : externData) {
+			Symbol primary = symbolTable.getPrimarySymbol(data.getMinAddress());
+			String name = primary != null ? primary.getName() : null;
+			if(name == null || !name.startsWith(projectPrefix)) continue;
+			if(isInCodeSegment(data.getMinAddress())) continue;
+			int offset = segmentOffset(data.getMinAddress());
+			addDgroupSymbol(new DgroupSymbol(name, offset, data.getLength()));
+		}
+		for(Map.Entry<String, Data> entry : inlineCandidateData.entrySet()) {
+			String name = entry.getKey();
+			if(!name.startsWith(projectPrefix)) continue;
+			Data data = entry.getValue();
+			if(isInCodeSegment(data.getMinAddress())) continue;
+			int offset = segmentOffset(data.getMinAddress());
+			addDgroupSymbol(new DgroupSymbol(name, offset, data.getLength()));
+		}
+
+		SymbolIterator it = symbolTable.getAllSymbols(false);
+		while(it.hasNext()) {
+			Symbol symbol = it.next();
+			if(symbol.getSymbolType() == SymbolType.FUNCTION) continue;
+			if(symbol.isExternal()) continue;
+
+			Address address = symbol.getAddress();
+			if(address == null || !address.isMemoryAddress()) continue;
+
+			SourceType source = symbol.getSource();
+			if(source != SourceType.USER_DEFINED && source != SourceType.IMPORTED) continue;
+
+			String name = symbol.getName();
+			if(!name.startsWith(projectPrefix)) continue;
+			if(isInCodeSegment(address)) continue;
+
+			int offset = segmentOffset(address);
+			if(dgroupSymbols.containsKey(offset)) continue;
+			addDgroupSymbol(new DgroupSymbol(name, offset, 1));
+		}
+	}
+
+	private void addDgroupSymbol(DgroupSymbol symbol) {
+		dgroupSymbols.put(symbol.offset, symbol);
+		dgroupSymbolsByName.put(symbol.name, symbol);
+	}
+
+	private static int segmentOffset(Address address) {
+		if(address instanceof SegmentedAddress) {
+			return ((SegmentedAddress)address).getSegmentOffset();
+		}
+		return (int)(address.getOffset() & 0xffff);
+	}
+
+	private boolean isInCodeSegment(Address address) {
+		if(!(address instanceof SegmentedAddress)) return false;
+		return codeSegments.contains(((SegmentedAddress)address).getSegment());
+	}
+
+	private String resolveDgroupOffset(int offset) {
+		DgroupSymbol exact = dgroupSymbols.get(offset);
+		if(exact != null) return exact.name;
+
+		Map.Entry<Integer, DgroupSymbol> ceiling = dgroupSymbols.ceilingEntry(offset);
+		if(ceiling != null) {
+			int distance = ceiling.getKey() - offset;
+			if(distance > 0 && distance <= 32) {
+				return "(" + ceiling.getValue().name + " - " + distance + ")";
+			}
+		}
+
+		return null;
+	}
+
+	private void collectLooseStringSymbols() {
+		Set<Address> covered = new HashSet<>();
+		for(Data data : externData) covered.add(data.getMinAddress());
+		for(Data data : inlineCandidateData.values()) covered.add(data.getMinAddress());
+
+		SymbolIterator it = symbolTable.getAllSymbols(false);
+		while(it.hasNext()) {
+			Symbol symbol = it.next();
+			if(symbol.getSymbolType() == SymbolType.FUNCTION) continue;
+			if(symbol.isExternal()) continue;
+
+			Address address = symbol.getAddress();
+			if(address == null || !address.isMemoryAddress()) continue;
+
+			String name = symbol.getName();
+			if(!name.startsWith(projectPrefix)) continue;
+
+			SourceType source = symbol.getSource();
+			if(source != SourceType.USER_DEFINED && source != SourceType.IMPORTED) continue;
+
+			if(covered.contains(address)) continue;
+			if(inlineCandidateLiterals.containsKey(name)) continue;
+
+			String literal = readLooseStringLiteral(address, 256);
+			if(literal == null) continue;
+
+			int length = measureLooseStringLength(address, 256);
+			if(length <= 0) continue;
+
+			inlineCandidateLiterals.put(name, literal);
+			looseStrings.put(name, new LooseString(address, length));
+		}
+	}
+
+	private String readLooseStringLiteral(Address address, int maxLength) {
+		Memory memory = program.getMemory();
+		StringBuilder stringBuilder = new StringBuilder("\"");
+		boolean sawPrintable = false;
+		boolean sawTerminator = false;
+
+		try {
+			for(int i = 0; i < maxLength; i++) {
+				int byteValue = memory.getByte(address.add(i)) & 0xff;
+				if(byteValue == 0) {
+					sawTerminator = true;
+					break;
+				}
+
+				boolean printable = (byteValue >= 0x20 && byteValue < 0x7f)
+						|| byteValue == '\n' || byteValue == '\r' || byteValue == '\t';
+				if(!printable) return null;
+				sawPrintable = true;
+
+				switch(byteValue) {
+					case '\\': stringBuilder.append("\\\\"); break;
+					case '"':  stringBuilder.append("\\\""); break;
+					case '\n': stringBuilder.append("\\n");  break;
+					case '\r': stringBuilder.append("\\r");  break;
+					case '\t': stringBuilder.append("\\t");  break;
+					default:   stringBuilder.append((char) byteValue);
+				}
+			}
+		}
+		catch(Exception ignored) {
+			return null;
+		}
+
+		if(!sawPrintable || !sawTerminator) return null;
+
+		stringBuilder.append("\"");
+		return stringBuilder.toString();
+	}
+
+	private int measureLooseStringLength(Address address, int maxLength) {
+		Memory memory = program.getMemory();
+		try {
+			for(int i = 0; i < maxLength; i++) {
+				if((memory.getByte(address.add(i)) & 0xff) == 0) return i + 1;
+			}
+		}
+		catch(Exception ignored) { }
+		return 0;
+	}
+
+	private String emitSourcesMk(Map<String, String> cFiles, Map<String, String> asmFiles) {
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("# Generated by ExportSources -- do not edit.\n\n");
+
+		appendSourcesMkList(stringBuilder, "CSRC", cFiles, null);
+		appendSourcesMkList(stringBuilder, "ASMSRC", asmFiles, null);
+		appendSourcesMkList(stringBuilder, "COBJ", cFiles, ".obj");
+		appendSourcesMkList(stringBuilder, "AOBJ", asmFiles, ".obj");
+		stringBuilder.append("OBJ = $(COBJ) $(AOBJ)\n");
+
+		return stringBuilder.toString();
+	}
+
+	private static void appendSourcesMkList(StringBuilder stringBuilder, String macroName, Map<String, String> files, String replaceExtension) {
+		stringBuilder.append(macroName).append(" =");
+		if(files == null || files.isEmpty()) {
+			stringBuilder.append('\n');
+			return;
+		}
+
+		List<String> names = new ArrayList<>(files.keySet());
+		names.sort(Comparator.naturalOrder());
+
+		Iterator<String> iterator = names.iterator();
+		while(iterator.hasNext()) {
+			String name = iterator.next();
+			if(replaceExtension != null) {
+				int dot = name.lastIndexOf('.');
+				if(dot >= 0) name = name.substring(0, dot) + replaceExtension;
+			}
+			stringBuilder.append(' ').append(name);
+			if(iterator.hasNext()) stringBuilder.append(" &");
+			stringBuilder.append('\n');
+			if(iterator.hasNext()) stringBuilder.append("\t");
+		}
 	}
 
 	private String emitHeader() {
@@ -242,18 +479,30 @@ public class ExportSources extends GhidraScript {
 
 		stringBuilder.append("#ifndef ").append(guard).append('\n');
 		stringBuilder.append("#define ").append(guard).append("\n\n");
+
+		stringBuilder.append("#include <ctype.h>\n\n");
 		stringBuilder.append("#include <stddef.h>\n");
 		stringBuilder.append("#include <stdint.h>\n");
 		stringBuilder.append("#include <stdio.h>\n");
+		stringBuilder.append("#include <stdbool.h>\n");
+		stringBuilder.append("#include <stdlib.h>\n");
+		stringBuilder.append("#include <string.h>\n\n");
+
+		stringBuilder.append("#include <direct.h>\n");
 		stringBuilder.append("#include <dos.h>\n");
-		stringBuilder.append("#include <stdbool.h>\n\n");
+		stringBuilder.append("#include <io.h>\n");
+		stringBuilder.append("#include <process.h>\n");
+		stringBuilder.append("#include <conio.h>\n\n");
 
 		stringBuilder.append("typedef struct find_t find_t;\n\n");
 
-		stringBuilder.append("typedef unsigned char  byte;\n");
+		stringBuilder.append("typedef unsigned char byte;\n");
 		stringBuilder.append("typedef unsigned short word, ushort, uint;\n");
-		stringBuilder.append("typedef unsigned long  dword, ulong;\n");
+		stringBuilder.append("typedef unsigned long dword, ulong;\n");
 		stringBuilder.append("typedef void code;\n\n");
+
+		stringBuilder.append("#define " + projectPrefix + "main main\n");
+		stringBuilder.append("#define __stack_probe(n)\n\n");
 
 		appendUserTypes(stringBuilder);
 
@@ -261,6 +510,8 @@ public class ExportSources extends GhidraScript {
 			for(Data data : externData) {
 				Symbol primary = symbolTable.getPrimarySymbol(data.getMinAddress());
 				String name = primary != null ? primary.getName() : ("DAT_" + data.getMinAddress());
+				if(!name.startsWith(projectPrefix)) continue;
+				if(isInCodeSegment(data.getMinAddress())) continue;
 				stringBuilder.append("extern ").append(renderExternDecl(data, name)).append(";\n");
 			}
 		}
@@ -268,9 +519,41 @@ public class ExportSources extends GhidraScript {
 		for(Map.Entry<String, Data> entry : inlineCandidateData.entrySet()) {
 			String name = entry.getKey();
 			if(actuallyInlined.contains(name)) continue;
+			if(!name.startsWith(projectPrefix)) continue;
 
 			Data data = entry.getValue();
-			stringBuilder.append("extern ").append(renderExternDecl(data, name)).append("; /* inline fallback */\n");
+			if(isInCodeSegment(data.getMinAddress())) continue;
+			stringBuilder.append("extern ").append(renderExternDecl(data, name)).append(";\n");
+		}
+
+		for(Map.Entry<String, LooseString> entry : looseStrings.entrySet()) {
+			String name = entry.getKey();
+			if(actuallyInlined.contains(name)) continue;
+			if(!name.startsWith(projectPrefix)) continue;
+
+			LooseString loose = entry.getValue();
+			if(isInCodeSegment(loose.address)) continue;
+
+			String dimension = loose.length > 0 ? "[" + loose.length + "]" : "[]";
+			stringBuilder.append("extern char ").append(name).append(dimension).append(";\n");
+		}
+
+		if(!cFunctions.isEmpty()) {
+			stringBuilder.append('\n');
+			for(Function function : cFunctions) {
+				String name = function.getName();
+				if(!name.startsWith(projectPrefix)) continue;
+				stringBuilder.append(renderFunctionDecl(function)).append(";\n");
+			}
+		}
+
+		if(!asmFunctions.isEmpty()) {
+			stringBuilder.append('\n');
+			for(Function function : asmFunctions) {
+				String name = function.getName();
+				if(!name.startsWith(projectPrefix)) continue;
+				stringBuilder.append("extern ").append(renderFunctionDecl(function)).append(";\n");
+			}
 		}
 
 		stringBuilder.append("\n#endif\n");
@@ -283,7 +566,6 @@ public class ExportSources extends GhidraScript {
 		UniversalID localId = dataTypeManager.getUniversalID();
 
 		List<DataType> userTypes = new ArrayList<>();
-
 		Iterator<DataType> it = dataTypeManager.getAllDataTypes();
 		while(it.hasNext()) {
 			DataType type = it.next();
@@ -293,15 +575,13 @@ public class ExportSources extends GhidraScript {
 			SourceArchive archive = type.getSourceArchive();
 			if(archive == null) continue;
 			if(!archive.getSourceArchiveID().equals(localId)) continue;
-
 			if(isLoaderCategory(type.getCategoryPath().getPath())) continue;
 
 			userTypes.add(type);
 		}
 
-		userTypes.sort(Comparator.comparing(DataType::getPathName));
-
 		if(userTypes.isEmpty()) return;
+		userTypes.sort(Comparator.comparing(DataType::getPathName));
 
 		for(DataType type : userTypes) {
 			if(type instanceof TypeDef) {
@@ -311,29 +591,23 @@ public class ExportSources extends GhidraScript {
 			else if(type instanceof Structure) {
 				Structure s = (Structure) type;
 				stringBuilder.append("typedef struct ").append(s.getName()).append(" {\n");
-
-				for(DataTypeComponent typeComponent : s.getDefinedComponents()) {
-					String fieldName = typeComponent.getFieldName() != null ? typeComponent.getFieldName() : ("field_" + typeComponent.getOffset());
-					stringBuilder.append("\t").append(renderTypeForDecl(typeComponent.getDataType(), fieldName)).append(";");
-
-					if(typeComponent.getComment() != null && !typeComponent.getComment().isEmpty()) {
-						stringBuilder.append(" /* ").append(typeComponent.getComment()).append(" */");
+				for(DataTypeComponent c : s.getDefinedComponents()) {
+					String fieldName = c.getFieldName() != null ? c.getFieldName() : ("field_" + c.getOffset());
+					stringBuilder.append("\t").append(renderTypeForDecl(c.getDataType(), fieldName)).append(";");
+					if(c.getComment() != null && !c.getComment().isEmpty()) {
+						stringBuilder.append(" /* ").append(c.getComment()).append(" */");
 					}
-
 					stringBuilder.append('\n');
 				}
-
 				stringBuilder.append("} ").append(s.getName()).append(";\n\n");
 			}
 			else if(type instanceof Union) {
 				Union union = (Union) type;
 				stringBuilder.append("typedef union ").append(union.getName()).append(" {\n");
-
-				for(DataTypeComponent typeComponent : union.getDefinedComponents()) {
-					String fieldName = typeComponent.getFieldName() != null ? typeComponent.getFieldName() : ("field_" + typeComponent.getOrdinal());
-					stringBuilder.append("\t").append(renderTypeForDecl(typeComponent.getDataType(), fieldName)).append(";\n");
+				for(DataTypeComponent c : union.getDefinedComponents()) {
+					String fieldName = c.getFieldName() != null ? c.getFieldName() : ("field_" + c.getOrdinal());
+					stringBuilder.append("\t").append(renderTypeForDecl(c.getDataType(), fieldName)).append(";\n");
 				}
-
 				stringBuilder.append("} ").append(union.getName()).append(";\n\n");
 			}
 			else if(type instanceof Enum) {
@@ -350,9 +624,8 @@ public class ExportSources extends GhidraScript {
 		}
 	}
 
-	private String emitC() {
-		StringBuilder stringBuilder = new StringBuilder();
-		stringBuilder.append("#include \"").append(basename).append(".h\"\n\n");
+	private Map<String, String> emitAllC() {
+		Map<String, String> files = new LinkedHashMap<>();
 
 		Map<String, Pattern> patternsBySymbol = new LinkedHashMap<>();
 		for(String symbolName : inlineCandidateLiterals.keySet()) {
@@ -385,40 +658,47 @@ public class ExportSources extends GhidraScript {
 			Function function = cFunctions.get(i);
 			String body = bodies.get(i);
 
+			StringBuilder fileBuilder = new StringBuilder();
+			fileBuilder.append("#include \"").append(basename).append(".h\"\n\n");
+
 			String platePre = program.getListing().getComment(CommentType.PLATE, function.getEntryPoint());
 			if(platePre != null && !platePre.isEmpty()) {
-				stringBuilder.append("/*\n");
-				for(String line : platePre.split("\n")) stringBuilder.append(" * ").append(line).append('\n');
-				stringBuilder.append(" */\n");
+				fileBuilder.append("/*\n");
+				for(String line : platePre.split("\n")) fileBuilder.append(" * ").append(line).append('\n');
+				fileBuilder.append(" */\n");
 			}
 
 			if(body == null) {
-				stringBuilder.append("/* decompile failed for ").append(function.getName()).append(" */\n\n");
-				continue;
+				fileBuilder.append("/* decompile failed for ").append(function.getName()).append(" */\n");
 			}
-
-			for(Map.Entry<String, Pattern> entry : patternsBySymbol.entrySet()) {
-				String symbolName = entry.getKey();
-				if(occurrenceCount.getOrDefault(symbolName, 0) != 1) continue;
-				Pattern pattern = entry.getValue();
-				Matcher matcher = pattern.matcher(body);
-				if(matcher.find()) {
-					actuallyInlined.add(symbolName);
-					matcher.reset();
-					body = matcher.replaceAll(Matcher.quoteReplacement(inlineCandidateLiterals.get(symbolName)));
+			else {
+				for(Map.Entry<String, Pattern> entry : patternsBySymbol.entrySet()) {
+					String symbolName = entry.getKey();
+					if(occurrenceCount.getOrDefault(symbolName, 0) != 1) continue;
+					Pattern pattern = entry.getValue();
+					Matcher matcher = pattern.matcher(body);
+					if(matcher.find()) {
+						actuallyInlined.add(symbolName);
+						matcher.reset();
+						body = matcher.replaceAll(Matcher.quoteReplacement(inlineCandidateLiterals.get(symbolName)));
+					}
 				}
+
+				body = normalizeDecompiledBody(body);
+
+				fileBuilder.append(body);
+				if(!body.endsWith("\n")) fileBuilder.append('\n');
 			}
 
-			body = normalizeDecompiledBody(body);
-
-			stringBuilder.append(body);
-			if(!body.endsWith("\n")) stringBuilder.append('\n');
-			stringBuilder.append('\n');
+			files.put(function.getName() + ".c", fileBuilder.toString());
 		}
 
-		appendGlobalDefinitions(stringBuilder);
+		StringBuilder globalsBuilder = new StringBuilder();
+		globalsBuilder.append("#include \"").append(basename).append(".h\"\n");
+		appendGlobalDefinitions(globalsBuilder);
+		files.put(basename + ".c", globalsBuilder.toString());
 
-		return stringBuilder.toString();
+		return files;
 	}
 
 	private void appendGlobalDefinitions(StringBuilder stringBuilder) {
@@ -430,6 +710,7 @@ public class ExportSources extends GhidraScript {
 
 			String name = primary != null ? primary.getName() : ("DAT_" + data.getMinAddress());
 			if(!name.startsWith(projectPrefix)) continue;
+			if(isInCodeSegment(data.getMinAddress())) continue;
 
 			section.append(renderDefinition(data, name)).append(";\n");
 			anyEmitted = true;
@@ -441,6 +722,8 @@ public class ExportSources extends GhidraScript {
 			if(!name.startsWith(projectPrefix)) continue;
 
 			Data data = entry.getValue();
+			if(isInCodeSegment(data.getMinAddress())) continue;
+
 			String literal = inlineCandidateLiterals.get(name);
 			int length = data.getLength();
 			String dimension = length > 0 ? "[" + length + "]" : "[]";
@@ -453,6 +736,23 @@ public class ExportSources extends GhidraScript {
 			anyEmitted = true;
 		}
 
+		for(Map.Entry<String, LooseString> entry : looseStrings.entrySet()) {
+			String name = entry.getKey();
+			if(actuallyInlined.contains(name)) continue;
+			if(!name.startsWith(projectPrefix)) continue;
+
+			LooseString loose = entry.getValue();
+			if(isInCodeSegment(loose.address)) continue;
+
+			String literal = inlineCandidateLiterals.get(name);
+			String dimension = loose.length > 0 ? "[" + loose.length + "]" : "[]";
+
+			section.append("char ").append(name).append(dimension);
+			if(literal != null) section.append(" = ").append(literal);
+			section.append(";\n");
+			anyEmitted = true;
+		}
+
 		if(anyEmitted) {
 			stringBuilder.append("\n");
 			stringBuilder.append(section);
@@ -460,52 +760,223 @@ public class ExportSources extends GhidraScript {
 		}
 	}
 
-	private static final Pattern _CSPEC_KEYWORD = Pattern.compile("\\b__(?:cdecl|stdcall|watcall)16(?:near|far)?\\b\\s*");
-	private static final Pattern _PARTIAL_FIELD = Pattern.compile("([A-Za-z_][A-Za-z_0-9]*)\\._([0-9]+)_([0-9]+)_");
+	private static final Pattern _PTRARITH_HEX = Pattern.compile(
+			"\\+ 0x([0-9a-fA-F]+)(?=\\))");
 
-	private static String normalizeDecompiledBody(String body) {
-		body = _CSPEC_KEYWORD.matcher(body).replaceAll("");
+	private static final Pattern _PTR_PAST_SCALAR = Pattern.compile(
+			"(?:\\(\\(([^()]+)\\)|\\()&(\\w+)\\)\\[([^\\]]+)\\]");
 
-		Matcher matcher = _PARTIAL_FIELD.matcher(body);
+	private static final Set<String> _ONE_BYTE_CAST_TYPES = new HashSet<>(java.util.Arrays.asList(
+			"undefined", "undefined1", "byte", "char", "unsigned char"));
+
+	private String normalizeDecompiledBody(String body) {
+		body = WatcomDecompileNormalizer.stripCspecKeywords(body);
+		body = WatcomDecompileNormalizer.expandPartialFields(body);
+		body = WatcomDecompileNormalizer.collapseLongWriteSplit(body);
+		body = WatcomDecompileNormalizer.collapseLongReadConcat22(body);
+		body = resolveAddressConstants(body);
+		body = resolvePtrPastScalar(body);
+		body = collapseDerefBufferAdd(body);
+		body = WatcomDecompileNormalizer.rewriteGreedyHexEscapes(body);
+		body = WatcomDecompileNormalizer.stripUnusedUnaff(body);
+		return body;
+	}
+
+	private String resolveAddressConstants(String body) {
+		Matcher matcher = _PTRARITH_HEX.matcher(body);
 		StringBuffer stringBuffer = new StringBuffer();
 		while(matcher.find()) {
-			String var = matcher.group(1);
-			int offset = Integer.parseInt(matcher.group(2));
-			int size  = Integer.parseInt(matcher.group(3));
-			String castType;
-			switch(size) {
-				case 1: {
-					castType = "byte";
-					break;
-				}
-
-				case 2: {
-					castType = "word";
-					break;
-				}
-
-				case 4: {
-					castType = "dword";
-					break;
-				}
-
-				default: {
-					castType = null;
-					break;
-				}
+			int value;
+			try { value = Integer.parseInt(matcher.group(1), 16); }
+			catch(NumberFormatException e) {
+				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(matcher.group(0)));
+				continue;
 			}
 
-			if(castType == null) {
-				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(matcher.group(0)));
+			String resolved = resolveDgroupOffset(value);
+			if(resolved != null) {
+				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement("+ " + resolved));
 			}
 			else {
-				String replacement = "(*(" + castType + " *)((char *)&" + var + " + " + offset + "))";
-				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(replacement));
+				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(matcher.group(0)));
 			}
 		}
-
 		matcher.appendTail(stringBuffer);
+		return stringBuffer.toString();
+	}
 
+	private String collapseDerefBufferAdd(String body) {
+		StringBuilder out = new StringBuilder();
+		int cursor = 0;
+		while(cursor < body.length()) {
+			int castStart = body.indexOf("*(", cursor);
+			if(castStart < 0) {
+				out.append(body, cursor, body.length());
+				return out.toString();
+			}
+
+			int rewrittenEnd = tryRewriteDerefBufferAdd(body, castStart, out, cursor);
+			if(rewrittenEnd > 0) {
+				cursor = rewrittenEnd;
+			}
+			else {
+				out.append(body, cursor, castStart + 1);
+				cursor = castStart + 1;
+			}
+		}
+		return out.toString();
+	}
+
+	private int tryRewriteDerefBufferAdd(String body, int castStart, StringBuilder out, int cursor) {
+		int castClose = body.indexOf(')', castStart + 2);
+		if(castClose < 0) return -1;
+
+		String castContent = body.substring(castStart + 2, castClose);
+		String trimmedCastContent = castContent.trim();
+		if(!trimmedCastContent.endsWith("*")) return -1;
+		String castType = trimmedCastContent.substring(0, trimmedCastContent.length() - 1).trim();
+		if(!_ONE_BYTE_CAST_TYPES.contains(castType)) return -1;
+
+		if(castClose + 1 >= body.length() || body.charAt(castClose + 1) != '(') return -1;
+		int innerOpen = castClose + 1;
+		int innerClose = findMatchingParen(body, innerOpen);
+		if(innerClose < 0) return -1;
+
+		String inner = body.substring(innerOpen + 1, innerClose);
+		String[] sides = splitTopLevelPlus(inner);
+		if(sides == null) return -1;
+
+		BufferRef bufferRef = parseBufferRef(sides[0]);
+		String indexExpr;
+		if(bufferRef != null) {
+			indexExpr = sides[1].trim();
+		}
+		else {
+			bufferRef = parseBufferRef(sides[1]);
+			if(bufferRef == null) return -1;
+			indexExpr = sides[0].trim();
+		}
+
+		indexExpr = stripRedundantWrappingParens(indexExpr);
+
+		String tail;
+		if(bufferRef.adjustment > 0) tail = "[" + indexExpr + " - " + bufferRef.adjustment + "]";
+		else tail = "[" + indexExpr + "]";
+
+		out.append(body, cursor, castStart);
+		out.append(bufferRef.name);
+		out.append(tail);
+		return innerClose + 1;
+	}
+
+	private static int findMatchingParen(String s, int openIndex) {
+		int depth = 1;
+		for(int i = openIndex + 1; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if(c == '(') depth++;
+			else if(c == ')') {
+				depth--;
+				if(depth == 0) return i;
+			}
+		}
+		return -1;
+	}
+
+	private static String[] splitTopLevelPlus(String s) {
+		int depth = 0;
+		for(int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if(c == '(') depth++;
+			else if(c == ')') depth--;
+			else if(c == '+' && depth == 0
+					&& i > 0 && i + 1 < s.length()
+					&& s.charAt(i - 1) == ' ' && s.charAt(i + 1) == ' ') {
+				return new String[] { s.substring(0, i - 1), s.substring(i + 2) };
+			}
+		}
+		return null;
+	}
+
+	private static String stripRedundantWrappingParens(String s) {
+		String trimmed = s.trim();
+		if(!trimmed.startsWith("(") || !trimmed.endsWith(")")) return trimmed;
+		int depth = 0;
+		for(int i = 0; i < trimmed.length(); i++) {
+			char c = trimmed.charAt(i);
+			if(c == '(') depth++;
+			else if(c == ')') {
+				depth--;
+				if(depth == 0 && i < trimmed.length() - 1) return trimmed;
+			}
+		}
+		return trimmed.substring(1, trimmed.length() - 1).trim();
+	}
+
+	private static final Pattern _IDENTIFIER = Pattern.compile("\\w+");
+
+	private static final class BufferRef {
+		final String name;
+		final int adjustment;
+		BufferRef(String name, int adjustment) { this.name = name; this.adjustment = adjustment; }
+	}
+
+	private BufferRef parseBufferRef(String s) {
+		String trimmed = s.trim();
+		if(trimmed.startsWith("(") && trimmed.endsWith(")")) {
+			String inside = trimmed.substring(1, trimmed.length() - 1).trim();
+			int minusIndex = inside.indexOf(" - ");
+			if(minusIndex > 0) {
+				String name = inside.substring(0, minusIndex).trim();
+				String numString = inside.substring(minusIndex + 3).trim();
+				if(_IDENTIFIER.matcher(name).matches()) {
+					try {
+						int adjustment = Integer.parseInt(numString);
+						DgroupSymbol sym = dgroupSymbolsByName.get(name);
+						if(sym != null && sym.size > 4) return new BufferRef(name, adjustment);
+					}
+					catch(NumberFormatException ignored) {}
+				}
+			}
+		}
+		else if(_IDENTIFIER.matcher(trimmed).matches()) {
+			DgroupSymbol sym = dgroupSymbolsByName.get(trimmed);
+			if(sym != null && sym.size > 4) return new BufferRef(trimmed, 0);
+		}
+		return null;
+	}
+
+	private String resolvePtrPastScalar(String body) {
+		Matcher matcher = _PTR_PAST_SCALAR.matcher(body);
+		StringBuffer stringBuffer = new StringBuffer();
+		while(matcher.find()) {
+			String castInside = matcher.group(1);
+			String symbolName = matcher.group(2);
+			String indexExpr = matcher.group(3);
+
+			DgroupSymbol sym = dgroupSymbolsByName.get(symbolName);
+			if(sym == null || sym.size <= 0 || sym.size > 4) {
+				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(matcher.group(0)));
+				continue;
+			}
+
+			DgroupSymbol next = dgroupSymbols.get(sym.offset + sym.size);
+			if(next == null || next.size <= 1) {
+				matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(matcher.group(0)));
+				continue;
+			}
+
+			if(castInside != null) {
+				String castType = castInside.trim().replaceAll("\\s*\\*$", "").trim();
+				if(!_ONE_BYTE_CAST_TYPES.contains(castType)) {
+					matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(matcher.group(0)));
+					continue;
+				}
+			}
+
+			String replacement = next.name + "[" + indexExpr + " - " + sym.size + "]";
+			matcher.appendReplacement(stringBuffer, Matcher.quoteReplacement(replacement));
+		}
+		matcher.appendTail(stringBuffer);
 		return stringBuffer.toString();
 	}
 
@@ -521,80 +992,196 @@ public class ExportSources extends GhidraScript {
 		return renderTypeForDecl(type, identifier);
 	}
 
-	private final Set<String> asmDefinedDecorated = new HashSet<>();
+	private String currentAsmFunctionDecorated;
 
 	private final Map<String, String> asmExterns = new LinkedHashMap<>();
 
-	private String emitAsm() {
-		StringBuilder stringBuilder = new StringBuilder();
+	private Map<String, String> emitAllAsm() {
+		Map<String, String> files = new LinkedHashMap<>();
 
-		switch(memoryModel) {
-			case FLAT: {
-				stringBuilder.append("\t.386p\n\t.model flat\n\n");
-				break;
-			}
-
-			case LARGE: {
-				stringBuilder.append("\t.386\n\t.model large\n\n");
-				break;
-			}
-
-			case SMALL:
-			default: {
-				stringBuilder.append("\t.386\n\t.model small\n\n");
-				break;
-			}
-		}
-
-		for(Function function : asmFunctions) asmDefinedDecorated.add(decorateWatcall(function.getName()));
-
-		TreeMap<String, List<Function>> bySegment = new TreeMap<>();
 		for(Function function : asmFunctions) {
-			String seg = segmentKey(function.getEntryPoint());
-			bySegment.computeIfAbsent(seg, k -> new ArrayList<>()).add(function);
-		}
+			currentAsmFunctionDecorated = decorateWatcall(function.getName());
+			asmExterns.clear();
 
-		StringBuilder bodyBuffer = new StringBuilder();
-		for(Map.Entry<String, List<Function>> entry : bySegment.entrySet()) {
-			String segName = entry.getKey();
-			List<Function> functions = entry.getValue();
-			functions.sort(Comparator.comparing(Function::getEntryPoint));
+			StringBuilder bodyBuffer = new StringBuilder();
+			String segName = segmentKey(function.getEntryPoint());
 
 			if(memoryModel == MemoryModel.FLAT) {
 				bodyBuffer.append("_TEXT SEGMENT PUBLIC 'CODE' USE32\n\n");
 			}
 			else {
 				bodyBuffer.append(segName).append(" SEGMENT BYTE PUBLIC 'CODE' USE16\n");
-				bodyBuffer.append("\tASSUME CS:").append(segName).append(", DS:DGROUP\n\n");
+				bodyBuffer.append("\tASSUME CS:").append(segName).append(", DS:").append(segName).append("\n\n");
 			}
 
-			for(Function function : functions) {
-				bodyBuffer.append("PUBLIC ").append(decorateWatcall(function.getName())).append('\n');
-			}
+			bodyBuffer.append("PUBLIC ").append(decorateWatcall(function.getName())).append("\n\n");
 
+			emitAsmFunction(bodyBuffer, function);
 			bodyBuffer.append('\n');
-
-			for(Function function : functions) {
-				emitAsmFunction(bodyBuffer, function);
-				bodyBuffer.append('\n');
-			}
 
 			if(memoryModel == MemoryModel.FLAT) bodyBuffer.append("_TEXT ENDS\n\n");
 			else bodyBuffer.append(segName).append(" ENDS\n\n");
-		}
 
-		if(!asmExterns.isEmpty()) {
-			for(Map.Entry<String, String> e : asmExterns.entrySet()) {
-				stringBuilder.append("EXTRN ").append(e.getKey()).append(":").append(e.getValue()).append('\n');
+			StringBuilder fileBuilder = new StringBuilder();
+			switch(memoryModel) {
+				case FLAT: {
+					fileBuilder.append("\t.386p\n\t.model flat\n\n");
+					break;
+				}
+
+				case LARGE: {
+					fileBuilder.append("\t.386\n\t.model large\n\n");
+					break;
+				}
+
+				case SMALL:
+				default: {
+					fileBuilder.append("\t.386\n\t.model small\n\n");
+					break;
+				}
 			}
 
-			stringBuilder.append('\n');
+			if(!asmExterns.isEmpty()) {
+				for(Map.Entry<String, String> e : asmExterns.entrySet()) {
+					fileBuilder.append("EXTRN ").append(e.getKey()).append(":").append(e.getValue()).append('\n');
+				}
+
+				fileBuilder.append('\n');
+			}
+
+			fileBuilder.append(bodyBuffer);
+			fileBuilder.append("\tEND\n");
+
+			files.put(function.getName() + ".asm", fileBuilder.toString());
 		}
 
-		stringBuilder.append(bodyBuffer);
-		stringBuilder.append("\tEND\n");
+		String projectAsm = emitProjectAsm();
+		if(projectAsm != null) files.put(basename + "_data.asm", projectAsm);
 
+		return files;
+	}
+
+	private static final class AsmDatum {
+		final String name;
+		final Address address;
+		final int length;
+		final String literal;
+		AsmDatum(String name, Address address, int length, String literal) {
+			this.name = name;
+			this.address = address;
+			this.length = length;
+			this.literal = literal;
+		}
+	}
+
+	private String emitProjectAsm() {
+		Map<String, List<AsmDatum>> bySegment = new LinkedHashMap<>();
+
+		for(Data data : externData) {
+			Symbol primary = symbolTable.getPrimarySymbol(data.getMinAddress());
+			String name = primary != null ? primary.getName() : null;
+			if(name == null || !name.startsWith(projectPrefix)) continue;
+			Address address = data.getMinAddress();
+			if(!isInCodeSegment(address)) continue;
+			addAsmDatum(bySegment, new AsmDatum(name, address, data.getLength(), null));
+		}
+
+		for(Map.Entry<String, Data> entry : inlineCandidateData.entrySet()) {
+			String name = entry.getKey();
+			if(actuallyInlined.contains(name)) continue;
+			if(!name.startsWith(projectPrefix)) continue;
+			Data data = entry.getValue();
+			Address address = data.getMinAddress();
+			if(!isInCodeSegment(address)) continue;
+			addAsmDatum(bySegment, new AsmDatum(name, address, data.getLength(), inlineCandidateLiterals.get(name)));
+		}
+
+		for(Map.Entry<String, LooseString> entry : looseStrings.entrySet()) {
+			String name = entry.getKey();
+			if(actuallyInlined.contains(name)) continue;
+			if(!name.startsWith(projectPrefix)) continue;
+			LooseString loose = entry.getValue();
+			if(!isInCodeSegment(loose.address)) continue;
+			addAsmDatum(bySegment, new AsmDatum(name, loose.address, loose.length, inlineCandidateLiterals.get(name)));
+		}
+
+		if(bySegment.isEmpty()) return null;
+
+		for(List<AsmDatum> items : bySegment.values()) items.sort(Comparator.comparing(d -> d.address));
+
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("\t.386\n\t.model small\n\n");
+
+		for(Map.Entry<String, List<AsmDatum>> entry : bySegment.entrySet()) {
+			String segName = entry.getKey();
+			stringBuilder.append(segName).append(" SEGMENT BYTE PUBLIC 'CODE' USE16\n\n");
+			for(AsmDatum datum : entry.getValue()) appendAsmDatum(stringBuilder, datum);
+			stringBuilder.append('\n').append(segName).append(" ENDS\n\n");
+		}
+
+		stringBuilder.append("\tEND\n");
 		return stringBuilder.toString();
+	}
+
+	private void addAsmDatum(Map<String, List<AsmDatum>> bySegment, AsmDatum datum) {
+		bySegment.computeIfAbsent(segmentKey(datum.address), k -> new ArrayList<>()).add(datum);
+	}
+
+	private void appendAsmDatum(StringBuilder stringBuilder, AsmDatum datum) {
+		String decorated = decorateCVariable(datum.name);
+		stringBuilder.append("PUBLIC ").append(decorated).append('\n');
+		stringBuilder.append(decorated).append('\t').append(renderAsmDataDirective(datum)).append('\n');
+	}
+
+	private String renderAsmDataDirective(AsmDatum datum) {
+		if(datum.literal != null) return "DB " + datum.literal + ",0";
+
+		byte[] bytes = new byte[datum.length];
+		try {
+			program.getMemory().getBytes(datum.address, bytes);
+		}
+		catch(Exception ignored) {
+			return zeroInitDirective(datum.length);
+		}
+
+		boolean allZero = true;
+		for(byte b : bytes) {
+			if(b != 0) {
+				allZero = false;
+				break;
+			}
+		}
+		if(allZero) return zeroInitDirective(datum.length);
+
+		if(datum.length == 2) {
+			int value = (bytes[0] & 0xff) | ((bytes[1] & 0xff) << 8);
+			return String.format("DW 0%04xh", value);
+		}
+		if(datum.length == 4) {
+			long value = (bytes[0] & 0xffL) | ((bytes[1] & 0xffL) << 8) | ((bytes[2] & 0xffL) << 16) | ((bytes[3] & 0xffL) << 24);
+			return String.format("DD 0%08xh", value);
+		}
+
+		StringBuilder bytesBuilder = new StringBuilder();
+		int perLine = 16;
+		for(int i = 0; i < bytes.length; i++) {
+			if(i % perLine == 0) {
+				if(i > 0) bytesBuilder.append('\n');
+				bytesBuilder.append("DB ");
+			}
+			else {
+				bytesBuilder.append(',');
+			}
+			bytesBuilder.append(String.format("0%02xh", bytes[i] & 0xff));
+		}
+		return bytesBuilder.toString();
+	}
+
+	private static String zeroInitDirective(int length) {
+		if(length == 1) return "DB 0";
+		if(length == 2) return "DW 0";
+		if(length == 4) return "DD 0";
+		return "DB " + length + " DUP (0)";
 	}
 
 	private void emitAsmFunction(StringBuilder stringBuilder, Function function) {
@@ -605,8 +1192,7 @@ public class ExportSources extends GhidraScript {
 			for(String line : platePre.split("\n")) stringBuilder.append("; ").append(line).append('\n');
 		}
 
-		String procFlavor = memoryModel == MemoryModel.FLAT ? "NEAR" : "NEAR";
-		stringBuilder.append(decoratedName).append(" PROC ").append(procFlavor).append('\n');
+		stringBuilder.append(decoratedName).append(" PROC NEAR\n");
 
 		AddressSetView body = function.getBody();
 		Listing listing = program.getListing();
@@ -655,7 +1241,7 @@ public class ExportSources extends GhidraScript {
 					stringBuilder.append(' ');
 					for(int i = 0; i < operands; i++) {
 						if(i > 0) stringBuilder.append(", ");
-						stringBuilder.append(renderOperand(instruction, i, function));
+						stringBuilder.append(renderOperand(instruction, i));
 					}
 				}
 			}
@@ -669,9 +1255,8 @@ public class ExportSources extends GhidraScript {
 		stringBuilder.append(decoratedName).append(" ENDP\n");
 	}
 
-	private String renderOperand(Instruction instruction, int operandIndex, Function inFunction) {
+	private String renderOperand(Instruction instruction, int operandIndex) {
 		String text = instruction.getDefaultOperandRepresentation(operandIndex);
-		String mnemonic = instruction.getMnemonicString().toUpperCase();
 
 		Reference[] references = instruction.getOperandReferences(operandIndex);
 		for(Reference reference : references) {
@@ -691,7 +1276,7 @@ public class ExportSources extends GhidraScript {
 			if(referenceType.isFlow() && !referenceType.isComputed()) {
 				if(symbol.getSymbolType() == SymbolType.FUNCTION) {
 					String decorated = decorateWatcall(symbolName);
-					if(!asmDefinedDecorated.contains(decorated)) {
+					if(!decorated.equals(currentAsmFunctionDecorated)) {
 						asmExterns.putIfAbsent(decorated, "NEAR");
 					}
 
@@ -705,15 +1290,25 @@ public class ExportSources extends GhidraScript {
 				return symbolName;
 			}
 
-			String renderedName = symbol.getSymbolType() == SymbolType.FUNCTION
-					? decorateWatcall(symbolName)
-					: symbolName;
+			String renderedName;
+			if(symbol.getSymbolType() == SymbolType.FUNCTION) {
+				renderedName = decorateWatcall(symbolName);
+			}
+			else if(symbolName.startsWith(projectPrefix)) {
+				renderedName = decorateCVariable(symbolName);
+			}
+			else {
+				renderedName = symbolName;
+			}
 
 			boolean isMemoryOperand = text.contains("[");
 			if(referenceType.isData()) {
-				boolean isDefinedHere = symbol.getSymbolType() == SymbolType.FUNCTION && asmDefinedDecorated.contains(renderedName);
+				boolean isDefinedHere = symbol.getSymbolType() == SymbolType.FUNCTION && renderedName.equals(currentAsmFunctionDecorated);
 				if(!isDefinedHere) {
-					asmExterns.putIfAbsent(renderedName, inferDataExternType(symbol));
+					String externType = symbol.getSymbolType() == SymbolType.FUNCTION
+							? "NEAR"
+							: inferDataExternType(symbol);
+					asmExterns.putIfAbsent(renderedName, externType);
 				}
 
 				if(isMemoryOperand) {
@@ -742,7 +1337,7 @@ public class ExportSources extends GhidraScript {
 			"MOVSB", "MOVSW", "MOVSD",
 			"CMPSB", "CMPSW", "CMPSD",
 			"SCASB", "SCASW", "SCASD",
-			"INSB",  "INSW",  "INSD",
+			"INSB", "INSW", "INSD",
 			"OUTSB", "OUTSW", "OUTSD"));
 
 	private static boolean isStringOp(String mnemonic) { return STRING_OPS.contains(mnemonic); }
@@ -809,13 +1404,6 @@ public class ExportSources extends GhidraScript {
 		}
 
 		return String.format("0%Xh", address.getOffset());
-	}
-
-	private boolean inFunctionOwnsSymbol(Function fn, Symbol sym) {
-		Address functionEntry = fn.getEntryPoint();
-		Address symbolAddress = sym.getAddress();
-
-		return segmentKey(functionEntry).equals(segmentKey(symbolAddress));
 	}
 
 	private String inferDataExternType(Symbol sym) {
@@ -965,7 +1553,7 @@ public class ExportSources extends GhidraScript {
 
 					default: {
 						if(byteValue >= 0x20 && byteValue < 0x7f) stringBuilder.append((char) byteValue);
-						else stringBuilder.append(String.format("\\x%02x", byteValue));
+						else stringBuilder.append(String.format("\\%03o", byteValue));
 					}
 				}
 			}
@@ -989,43 +1577,12 @@ public class ExportSources extends GhidraScript {
 
 	private static Pattern globToRegex(String glob) {
 		StringBuilder stringBuilder = new StringBuilder("^");
-
 		for(int i = 0; i < glob.length(); i++) {
-			char typeComponent = glob.charAt(i);
-			switch(typeComponent) {
-				case '*': {
-					stringBuilder.append(".*");
-					break;
-				}
-
-				case '?': {
-					stringBuilder.append('.');
-					break;
-				}
-
-				case '.':
-				case '\\':
-				case '(':
-				case ')':
-				case '[':
-				case ']':
-				case '{':
-				case '}':
-				case '^':
-				case '$':
-				case '|':
-				case '+': {
-					stringBuilder.append('\\').append(typeComponent);
-					break;
-				}
-
-				default: {
-					stringBuilder.append(typeComponent);
-					break;
-				}
-			}
+			char c = glob.charAt(i);
+			if(c == '*') stringBuilder.append(".*");
+			else if(c == '?') stringBuilder.append('.');
+			else stringBuilder.append(Pattern.quote(String.valueOf(c)));
 		}
-
 		stringBuilder.append('$');
 		return Pattern.compile(stringBuilder.toString());
 	}
@@ -1039,6 +1596,26 @@ public class ExportSources extends GhidraScript {
 		}
 
 		return renderTypeForDecl(type, identifier);
+	}
+
+	private String renderFunctionDecl(Function function) {
+		StringBuilder out = new StringBuilder();
+		out.append(renderTypeForDecl(function.getReturnType(), "").trim());
+		out.append(' ').append(function.getName()).append('(');
+
+		Parameter[] params = function.getParameters();
+		if(params.length == 0) out.append("void");
+		else {
+			for(int i = 0; i < params.length; i++) {
+				if(i > 0) out.append(", ");
+				String paramName = params[i].getName();
+				if(paramName == null || paramName.isEmpty()) paramName = "param_" + (i + 1);
+				out.append(renderTypeForDecl(params[i].getDataType(), paramName));
+			}
+		}
+
+		out.append(')');
+		return out.toString();
 	}
 
 	private static boolean isStringTypeName(DataType type) {
@@ -1083,13 +1660,8 @@ public class ExportSources extends GhidraScript {
 	private static String mapTypeName(DataType type) {
 		String name = type.getName();
 
-		switch(name) {
-			case "char": return "char";
-			case "void": return "void";
-			case "bool": return "_Bool";
-			case "float": return "float";
-			case "double": return "double";
-		}
+		if(name.equals("bool")) return "_Bool";
+		if(PRIMITIVE_TYPE_PASSTHROUGH.contains(name)) return name;
 
 		if(type instanceof Structure) return "struct " + name;
 		if(type instanceof Union) return "union " + name;
@@ -1097,55 +1669,30 @@ public class ExportSources extends GhidraScript {
 
 		if(type instanceof BuiltInDataType) {
 			boolean unsigned;
-			switch(name) {
-				case "byte":
-				case "word":
-				case "dword":
-				case "qword":
-				case "uchar":
-				case "ushort":
-				case "uint":
-				case "ulong":
-				case "ulonglong":
-				case "undefined":
-				case "undefined1":
-				case "undefined2":
-				case "undefined4":
-				case "undefined6":
-				case "undefined8": {
-					unsigned = true;
-					break;
-				}
-
-				case "sbyte":
-				case "sword":
-				case "sdword":
-				case "sqword":
-				case "schar":
-				case "short":
-				case "int":
-				case "long":
-				case "longlong": {
-					unsigned = false;
-					break;
-				}
-
-				default: {
-					unsigned = name.startsWith("u");
-					break;
-				}
-			}
+			if(UNSIGNED_BUILTIN_NAMES.contains(name)) unsigned = true;
+			else if(SIGNED_BUILTIN_NAMES.contains(name)) unsigned = false;
+			else unsigned = name.startsWith("u");
 
 			switch(type.getLength()) {
-				case 1: return unsigned ? "unsigned char" : "int8_t";
-				case 2: return unsigned ? "uint16_t" : "int16_t";
-				case 4: return unsigned ? "uint32_t" : "int32_t";
+				case 1: return unsigned ? "unsigned char" : "signed char";
+				case 2: return unsigned ? "unsigned int" : "int";
+				case 4: return unsigned ? "unsigned long" : "long";
 				case 8: return unsigned ? "uint64_t" : "int64_t";
 			}
 		}
 
 		return name;
 	}
+
+	private static final Set<String> PRIMITIVE_TYPE_PASSTHROUGH = new HashSet<>(java.util.Arrays.asList(
+			"char", "void", "float", "double"));
+
+	private static final Set<String> UNSIGNED_BUILTIN_NAMES = new HashSet<>(java.util.Arrays.asList(
+			"byte", "word", "dword", "qword", "uchar", "ushort", "uint", "ulong", "ulonglong",
+			"undefined", "undefined1", "undefined2", "undefined4", "undefined6", "undefined8"));
+
+	private static final Set<String> SIGNED_BUILTIN_NAMES = new HashSet<>(java.util.Arrays.asList(
+			"sbyte", "sword", "sdword", "sqword", "schar", "short", "int", "long", "longlong"));
 
 	private void atomicWrite(Path target, String content) throws IOException {
 		Path tmp = target.resolveSibling(target.getFileName().toString() + ".tmp");

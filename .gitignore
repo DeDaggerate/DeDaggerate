@@ -1,4 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 Emily "TTG" Banerjee <prs.ttg+dedagger@pm.me>
+
 binaries/
+
 ghidra/DeDaggerate.gpr
 ghidra/DeDaggerate.rep/
 
@@ -7,3 +11,11 @@ ghidra/DeDaggerate.rep/
 __pycache__/
 
 /.*/
+
+dagger/src/*.c
+dagger/src/*.h
+dagger/src/*.asm
+dagger/src/*.err
+dagger/src/*.obj
+dagger/src/*.exe
+dagger/src/sources.mk

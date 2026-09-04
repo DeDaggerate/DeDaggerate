@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 Emily "TTG" Banerjee <prs.ttg+dedagger@pm.me>
+
+!include sources.mk
+
+CC = wcc
+ASM = wasm
+LINK = wlink
+
+CFLAGS = -bt=dos -zq -ms
+ASFLAGS = -bt=dos -zq -ms
+
+LDFLAGS = option quiet system dos
+LDLIBS = library clibs.lib
+
+dagger.exe: $(OBJ)
+	$(LINK) $(LDFLAGS) file { $(OBJ) } $(LDLIBS) name $@
+
+.c.obj:
+	$(CC) $(CFLAGS) -Fo=$@ $<
+
+.asm.obj:
+	$(ASM) $(ASFLAGS) -Fo=$@ $<

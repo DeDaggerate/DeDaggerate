@@ -1,0 +1,17 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 Emily "TTG" Banerjee <prs.ttg+dedagger@pm.me>
+
+if [ -z "${WATCOM:-}" ]; then
+	echo "watenv: WATCOM is not set; point it at your Open Watcom install root" >&2
+	return 1 2>/dev/null || exit 1
+fi
+
+if [ ! -d "$WATCOM" ]; then
+	echo "watenv: \$WATCOM=$WATCOM is not a directory" >&2
+	return 1 2>/dev/null || exit 1
+fi
+
+export WATCOM="$WATCOM"
+export PATH="$WATCOM/binl64:$WATCOM/binl:$PATH"
+export INCLUDE="$WATCOM/h"
+export LIBPATH="$WATCOM/lib286/dos:$WATCOM/lib286"
